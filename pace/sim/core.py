@@ -89,7 +89,11 @@ class Simulator:
         self.carbon = carbon or CarbonTrace(zones, wl.carbon_source, seed=seed)
         start_hour = wl.start_hour if wl.start_hour is not None else float(self.rng.integers(0, 24))
         self.start_hour = start_hour
-        self.carbon.set_start(int(start_hour) + 24 * int(self.rng.integers(0, 7)))
+        days = max(2, min(len(v) for v in self.carbon.series.values()) // 24)
+        if self.carbon.source == "synthetic":
+            self.carbon.set_start(int(start_hour) + 24 * int(self.rng.integers(0, days - 1)))
+        else:  # real traces are indexed by UTC hour; start_hour is local time in India (UTC+5:30)
+            self.carbon.set_start(int((start_hour - 5.5) % 24) + 24 * int(self.rng.integers(0, days - 1)))
         self.nodes = [SNode(s, i) for i, s in enumerate(topo.nodes)]
         self.by_name = {n.spec.name: n for n in self.nodes}
         self.servers = [n for n in self.nodes if n.spec.tier != EDGE]

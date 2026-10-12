@@ -5,7 +5,8 @@ Two sources:
     with a daily shape (solar dip at midday, evening peak) and AR(1) noise.
     Every result produced with this source must be labelled SYNTHETIC CARBON.
   * a directory of Electricity Maps Data Portal hourly CSVs, one file per zone,
-    named <ZONE>*.csv (e.g. IN-WE_2024_hourly.csv). The column whose name contains
+    named <ZONE>*.csv (e.g. IN-WE_2024_hourly.csv); "dir@2024" selects a year
+    (train on one year, test on another). The column whose name contains
     "Carbon Intensity" and "(LCA)" (or "direct" as a fallback) is used.
 """
 from __future__ import annotations
@@ -33,8 +34,9 @@ class CarbonTrace:
         self.series: dict[str, np.ndarray] = {}
         rng = np.random.default_rng(seed)
         if source != "synthetic":
+            directory, _, year = source.partition("@")  # e.g. "data/carbon@2024" picks the 2024 files
             for z in zones:
-                files = sorted(Path(source).glob(f"{z}*.csv"))
+                files = sorted(f for f in Path(directory).glob(f"{z}*.csv") if year in f.name)
                 if not files:
                     raise FileNotFoundError(f"no CSV for zone {z} in {source}")
                 self.series[z] = _read_em_csv(files[0])
@@ -70,7 +72,7 @@ class CarbonTrace:
 
 
 def _read_em_csv(path: Path) -> np.ndarray:
-    with open(path, newline="", encoding="utf-8") as f:
+    with open(path, newline="", encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
     cols = [c for c in rows[0] if "Carbon Intensity" in c or "carbon_intensity" in c.lower()]
     col = next((c for c in cols if "LCA" in c or "lifecycle" in c.lower()), None) or next(

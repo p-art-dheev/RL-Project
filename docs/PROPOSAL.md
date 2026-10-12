@@ -22,6 +22,27 @@ Status: design proposal (pre-implementation). Last updated 2026-10-12.
 | **Compute** | Training runs locally on the HP Victus (RTX 3050 4 GB plus CPU parallel envs). **No GPU is needed on AWS.** |
 | **AWS budget** | Expected **≈ $35–45 of the $100**: small instances, stopped when idle, budget alarms. |
 
+
+## 0.1 Implementation status (2-day build, Oct 2026)
+
+| Item | Status |
+|---|---|
+| Dataset parser (MERSEM's dataset), workload classes A/B/C, calibrated DES simulator | **Done** (`pace/`) |
+| Baselines: Random, Edge/Fog/Cloud-only, EFT, Carbon-greedy, CA-EFT (tuned), Job-EFT, **MERSEM** (+Oracle) | **Done** |
+| PACE: size-agnostic node-scoring policy, BC warm start, preference-conditioned PPO, masks, DEFER, PI SLA controller | **Done** (`pace/rl/`) |
+| Real testbed: worker, orchestrator (same scheduler code), dashboard, AWS deploy, calibration, camera, failure injection | **Done** (`testbed/`), deployed by you |
+| Experiments E1–E5 (sim), E8 (real AWS), E9 (sim-to-real) | Scripts done; E1–E5 run here, E8/E9 run on your laptop |
+| GNN DAG encoder | **Simplified:** DAG structure enters through critical-path and descendant features; the GNN is future work |
+| PPO-Lagrangian variant, DEGRADE action, spot-interruption handling | Not built (COULD tier) |
+| Real carbon traces | Synthetic hourly profiles until the Electricity Maps CSVs are added (`--carbon data/carbon@2024`) |
+
+Deviations from the plan below, chosen for the 2-day deadline:
+- The fog tier is AWS Mumbai rather than a local LAN box.
+- The edge is the laptop, emulated as a Pi-class camera box: 1 core, ×3 slowdown.
+- Live runs use a time-compressed carbon clock (1 grid hour per minute) so that carbon dynamics are visible in a 10-minute demo.
+
+**Reward as implemented (v2):** `r = −[(1−w)·carbon_task / (work_task · carbon_per_work_fog) + w·penalty_job]`, with a short discount (γ = 0.8). Each decision gets its own task's carbon plus the full deadline penalty of its job. v1 split the penalty across a job's tasks, which drowned the deadline signal for large DAGs and made the policy ignore `w`. We diagnosed this on the test split and fixed it.
+
 ---
 
 ## 1. Papers analysed and choice of base paper

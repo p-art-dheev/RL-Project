@@ -3,6 +3,8 @@
   python -m testbed.aws up        # 2 workers in ap-south-1 (fog) + 2 in eu-north-1 (cloud)
   python -m testbed.aws status    # list instances, health-check workers
   python -m testbed.aws down      # terminate everything tagged project=pace, delete security groups
+  python -m testbed.aws stop | start   # pause between sessions (start rewrites the new IPs)
+  python -m testbed.aws allow     # your laptop's public IP changed (new Wi-Fi)? re-authorise it
 
 Credentials come from the standard AWS chain (aws configure / env vars). Workers are
 installed by cloud-init user-data (no SSH needed). The worker port is only opened to
@@ -25,7 +27,7 @@ from botocore.exceptions import ClientError
 
 ROOT = Path(__file__).resolve().parent
 TAG = {"Key": "project", "Value": "pace"}
-PORT = 8000
+PORT = 80  # plain HTTP on 80 passes most campus / office firewalls
 SITES = [  # (region, tier, loc, zone, prefix)
     ("ap-south-1", 1, "BOM", "IN-WE", "bom"),
     ("eu-north-1", 2, "ARN", "SE-SE3", "arn"),
@@ -207,13 +209,43 @@ def stop(_a) -> None:
             print("stopped", ids)
 
 
+def allow(_a) -> None:
+    """Re-authorise this laptop after its public IP changed (e.g. home -> college Wi-Fi)."""
+    ip = my_ip()
+    for region, *_r in SITES:
+        ensure_sg(boto3.client("ec2", region_name=region), [f"{ip}/32"])
+    print("allowed", ip, "on port", PORT)
+
+
+def start(_a) -> None:
+    """Start stopped instances and rewrite node URLs with their new public IPs."""
+    for p in sorted(ROOT.glob("nodes*.json")):
+        if p.name == "nodes.local.json":
+            continue
+        cfg = json.loads(p.read_text())
+        for region, *_r in SITES:
+            ids = [n["instance"] for n in cfg["nodes"] if n.get("region") == region]
+            if not ids:
+                continue
+            ec2 = boto3.client("ec2", region_name=region)
+            ec2.start_instances(InstanceIds=ids)
+            ec2.get_waiter("instance_running").wait(InstanceIds=ids)
+            desc = {i["InstanceId"]: i for r in ec2.describe_instances(InstanceIds=ids)["Reservations"] for i in r["Instances"]}
+            for n in cfg["nodes"]:
+                if n.get("instance") in desc:
+                    n["url"] = f"http://{desc[n['instance']]['PublicIpAddress']}:{PORT}"
+            ensure_sg(ec2, [f"{d['PublicIpAddress']}/32" for d in desc.values()] + [f"{my_ip()}/32"])
+        p.write_text(json.dumps(cfg, indent=1))
+        print("updated", p)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["up", "status", "down", "stop"])
+    ap.add_argument("cmd", choices=["up", "status", "down", "stop", "start", "allow"])
     ap.add_argument("--edges", type=int, default=2, help="edge workers on the laptop")
     ap.add_argument("--pool", default="a", help="second pool 'b' for a live side-by-side (A/B) demo")
     a = ap.parse_args()
-    {"up": up, "status": status, "down": down, "stop": stop}[a.cmd](a)
+    {"up": up, "status": status, "down": down, "stop": stop, "start": start, "allow": allow}[a.cmd](a)
 
 
 if __name__ == "__main__":

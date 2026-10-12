@@ -49,9 +49,13 @@ def main():
         except Exception as e:  # noqa: BLE001
             print("orchestrator not reachable:", e)
         if a.show:
-            cv2.imshow(a.camera, small)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+            try:
+                cv2.imshow(a.camera, small)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
+            except cv2.error:
+                print("preview needs the full opencv-python package; continuing without it")
+                a.show = False
         if sent % 20 == 0:
             print(f"{a.camera}: sent {sent} frames ({len(jpg) / 1000:.0f} KB each)")
         time.sleep(max(0.0, period - (time.time() - t0)))

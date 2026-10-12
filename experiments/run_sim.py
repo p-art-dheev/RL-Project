@@ -11,6 +11,7 @@ import argparse
 import csv
 import json
 import multiprocessing as mp
+import os
 import time
 from pathlib import Path
 
@@ -72,11 +73,14 @@ def scenarios(exp: str):
 
 
 def run_one(job):
-    exp, label, topo_name, wl_kw, method, seed = job
+    exp, label, topo_name, wl_kw, method, seed, carbon, model = job
+    global MODEL
+    MODEL = model
     import torch
     torch.set_num_threads(1)
     topo = testbed_topology() if topo_name == "testbed" else city_topology()
     wl = Workload(**wl_kw)
+    wl.carbon_source = carbon
     wl.start_hour = float((seed * 5) % 24)
     sched = methods([method])[method]()
     sim = Simulator(topo, wl, seed=1000 + seed)
@@ -106,6 +110,8 @@ def main():
     ap.add_argument("--seeds", type=int, default=10)
     ap.add_argument("--procs", type=int, default=4)
     ap.add_argument("--tag", default="")
+    ap.add_argument("--carbon", default="synthetic", help='e.g. "data/carbon@2024" (Electricity Maps CSVs)')
+    ap.add_argument("--model", default=MODEL)
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     jobs = []
@@ -113,12 +119,12 @@ def main():
         n_seeds = a.seeds if exp == "E1" else max(3, a.seeds // 2)
         for m in ms:
             for s in range(n_seeds):
-                jobs.append((exp, label, topo, wl_kw, m, s))
+                jobs.append((exp, label, topo, wl_kw, m, s, a.carbon, a.model))
     # slow MERSEM jobs first for better load balance
     jobs.sort(key=lambda j: 0 if j[4].startswith("MERSEM") else 1)
     t0 = time.time()
     rows = []
-    with mp.get_context("fork").Pool(a.procs) as pool:
+    with mp.get_context("spawn" if os.name == "nt" else "fork").Pool(a.procs) as pool:
         for i, r in enumerate(pool.imap_unordered(run_one, jobs)):
             rows.append(r)
             if (i + 1) % 25 == 0:

@@ -4,8 +4,8 @@
 
 Rollouts run in parallel worker processes over domain-randomised topologies and
 workloads (pace.config.randomized); w ~ U[0, 1] is sampled per episode.
-Reward per decision (attributed to the task it placed, see docs/PROPOSAL.md §5.4):
-  r = -[(1 - w) * task_carbon / C_ref(class) + w * job_penalty / n_tasks] / n_decisions(task)
+Reward per decision (attributed to the task it placed):
+  r = -[(1 - w) * task_carbon / (task_work * fog_carbon_per_work) + w * job_penalty]
   job_penalty = miss * (1 + min(1, tardiness / deadline_window))
 """
 from __future__ import annotations
@@ -28,7 +28,7 @@ from ..views import DEFER
 from .features import F_N, F_T, K_MAX, featurize
 from .model import PACENet
 
-GAMMA, LAM = 0.99, 0.95
+GAMMA, LAM = 0.8, 0.9  # short horizon: a decision is judged mainly by its own job
 
 
 def make_sim(seed: int, horizon: float = 1200.0):
@@ -39,6 +39,12 @@ def make_sim(seed: int, horizon: float = 1200.0):
 
 
 def _rewards(steps, w, sim):
+    """Per-decision reward: the decision's own task carbon (normalised per unit of work, so
+    ~1 on the near fog, ~0.05 in Stockholm, ~4 on the edge) plus the FULL deadline penalty
+    of the job it belongs to. Spreading the penalty over a job's tasks (v1) drowned the
+    deadline signal for large DAGs and made the policy ignore w."""
+    fog = next((n for n in sim.nodes if n.spec.tier == 1), sim.servers[0])
+    c_unit = fog.dyn_w / 3.6e6 * sim.carbon.mean(fog.spec.zone)  # g per reference-core second on the fog
     r = np.zeros(len(steps), np.float32)
     for i, task in enumerate(steps):
         job = task.job
@@ -46,7 +52,8 @@ def _rewards(steps, w, sim):
         miss = job.finish > js.deadline + 1e-9
         tard = max(0.0, job.finish - js.deadline) / max(js.deadline - js.arrival, 1e-6)
         pen = float(miss) * (1.0 + min(1.0, tard))
-        r[i] = -((1 - w) * task.carbon / sim.c_ref[js.cls] + w * pen / len(job.tasks)) / max(1, task.n_decisions)
+        carb = task.carbon / (max(task.spec.work, 1e-3) * c_unit)
+        r[i] = -((1 - w) * carb + w * pen)
     return r
 
 
@@ -125,7 +132,7 @@ def _merge(results):
     return data, stats
 
 
-def evaluate(net, seeds=(11, 12), w=0.5):
+def evaluate(net, seeds=(11, 12), w=0.75):
     from .agent import PACE
     out = []
     for sd in seeds:
@@ -153,7 +160,7 @@ def main():
     if a.init:
         net.load_state_dict(torch.load(a.init, weights_only=True))
     opt = torch.optim.Adam(net.parameters(), lr=a.lr)
-    ctx = mp.get_context("fork")
+    ctx = mp.get_context("spawn" if os.name == "nt" else "fork")
     log = []
     t_start = time.time()
     seed = 1
@@ -181,7 +188,7 @@ def main():
                 print(f"[BC {it}] n={n} loss={loss.item():.3f} acc={acc:.3f} t={time.time() - t_start:.0f}s", flush=True)
             torch.save(net.state_dict(), a.out.replace(".pt", "_bc.pt"))
             ev = evaluate(net)
-            print(f"[BC eval w=.5] PACE A={ev[0]:.3f} B={ev[1]:.3f} CO2={ev[2]:.2f} | CA-EFT A={ev[3]:.3f} B={ev[4]:.3f} CO2={ev[5]:.2f}", flush=True)
+            print(f"[BC eval w=.75] PACE A={ev[0]:.3f} B={ev[1]:.3f} CO2={ev[2]:.2f} | CA-EFT A={ev[3]:.3f} B={ev[4]:.3f} CO2={ev[5]:.2f}", flush=True)
         # ---------------- PPO ----------------
         it = 0
         while time.time() - t_start < a.minutes * 60:

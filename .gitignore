@@ -1,8 +1,11 @@
-__pycache__/
-*.pyc
-.venv/
-data/raw/
-runs/
 *.parquet
-.env
 *.pem
+*.pyc
+.env
+.venv/
+__pycache__/
+data/raw/
+logs/
+models/*_it*.pt
+runs/
+testbed/nodes*.json

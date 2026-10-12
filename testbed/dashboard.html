@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PACE Live Testbed</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+  :root { --bg:#0f1419; --panel:#182029; --line:#2a3542; --text:#e6edf3; --muted:#8b98a5;
+          --ok:#3fb950; --bad:#f85149; --warn:#d29922; --edge:#a371f7; --fog:#f0883e; --cloud:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:baseline; padding:14px 20px; border-bottom:1px solid var(--line); }
+  header h1 { font-size:18px; margin:0; }
+  .badge { padding:2px 10px; border-radius:12px; background:var(--panel); border:1px solid var(--line); color:var(--muted); font-size:12px; }
+  main { padding:16px 20px; display:grid; gap:16px; grid-template-columns: 1fr; max-width:1500px; margin:0 auto; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .panel h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:0 0 10px; }
+  .kpis { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; }
+  .kpi { background:#121a22; border:1px solid var(--line); border-radius:8px; padding:10px; }
+  .kpi .v { font-size:22px; font-weight:600; font-variant-numeric: tabular-nums; }
+  .kpi .l { color:var(--muted); font-size:12px; }
+  .row-label { font-size:12px; color:var(--muted); margin:6px 0; }
+  .tiers { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
+  .tier h3 { margin:0 0 8px; font-size:14px; }
+  .tier .sub { color:var(--muted); font-size:12px; font-weight:400; }
+  .node { border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-bottom:8px; background:#121a22; }
+  .node.down { border-color:var(--bad); opacity:.7; }
+  .node .top { display:flex; justify-content:space-between; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; }
+  .bar { height:7px; background:#0b1015; border-radius:4px; overflow:hidden; margin-top:6px; display:flex; }
+  .bar span { display:block; height:100%; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  td, th { padding:4px 6px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:500; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .muted { color:var(--muted); }
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  button, select, input { background:#0b1015; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 10px; font:inherit; }
+  button { cursor:pointer; } button:hover { border-color:var(--cloud); }
+  .chart { height:230px; }
+  @media (max-width: 900px) { .tiers, .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>PACE live edge–cloud testbed</h1>
+  <span class="badge" id="sched">–</span>
+  <span class="badge" id="clock">–</span>
+  <span class="badge" id="grid">–</span>
+  <span class="badge" id="pref">–</span>
+</header>
+<main>
+  <section class="panel">
+    <h2>Service level &amp; carbon</h2>
+    <div id="kpiRows"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Topology (live)</h2>
+    <div class="tiers">
+      <div class="tier"><h3 style="color:var(--edge)">Edge <span class="sub">Coimbatore · grid IN-SO</span></h3><div id="t0"></div></div>
+      <div class="tier"><h3 style="color:var(--fog)">Fog <span class="sub">AWS Mumbai ap-south-1 · grid IN-WE</span></h3><div id="t1"></div></div>
+      <div class="tier"><h3 style="color:var(--cloud)">Cloud <span class="sub">AWS Stockholm eu-north-1 · grid SE-SE3</span></h3><div id="t2"></div></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel"><h2>Recent SLA violations (class A+B, last 60 jobs)</h2><div id="slaChart" class="chart"></div></div>
+    <div class="panel"><h2>Cumulative operational carbon (gCO₂)</h2><div id="co2Chart" class="chart"></div></div>
+  </section>
+
+  <section class="panel">
+    <h2>Live controls</h2>
+    <div class="controls">
+      <select id="failNode"></select><button onclick="act('fail', {node: v('failNode'), secs: 60})">Crash node 60 s</button>
+      <select id="spikeZone"><option>IN-WE</option><option>SE-SE3</option><option>IN-SO</option></select>
+      <button onclick="act('spike', {zone: v('spikeZone'), factor: 4, secs: 90})">Carbon spike ×4 (90 s)</button>
+      <button onclick="act('burst', {mult: 3, secs: 60})">Rush hour: ×3 jobs for 60 s</button>
+      <span class="muted">SLA target</span><input id="target" size="6" placeholder="0.05">
+      <button onclick="act('target', {value: v('target')})">Set</button>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel"><h2>Why did the scheduler choose that? (latest decisions)</h2>
+      <table><thead><tr><th>t</th><th>job</th><th>chosen</th><th>budget s</th><th>candidates: est. finish s · gCO₂ (✓ allowed)</th></tr></thead><tbody id="dec"></tbody></table>
+    </div>
+    <div class="panel"><h2>Events</h2><table><tbody id="ev"></tbody></table>
+      <h2 style="margin-top:14px">Camera</h2><div id="cam" class="muted">no camera frames yet</div>
+    </div>
+  </section>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const peers = [location.origin].concat(params.getAll('peer'));
+const v = id => document.getElementById(id).value;
+const pct = x => (100 * (x || 0)).toFixed(1) + '%';
+const tierColor = ['var(--edge)', 'var(--fog)', 'var(--cloud)'];
+let nodesInit = false;
+
+async function act(kind, q) {
+  const qs = new URLSearchParams(q).toString();
+  await fetch(`/api/${kind}?${qs}`, {method: 'POST'});
+}
+
+function kpiRow(s, label) {
+  const m = s.summary || {};
+  const items = [
+    ['Jobs done', m.jobs ?? 0], ['Alert SLA miss (A)', pct(m.sla_A)], ['Analytics SLA miss (B)', pct(m.sla_B)],
+    ['Batch SLA miss (C)', pct(m.sla_C)], ['Carbon dyn. (g)', (m.carbon_dyn || 0).toFixed(3)],
+    ['p95 alert latency', (m.p95_A || 0).toFixed(2) + ' s'], ['Decision time', (s.decide_ms || 0).toFixed(2) + ' ms'],
+    ['Work on edge/fog/cloud', `${pct(m.share_edge)} / ${pct(m.share_fog)} / ${pct(m.share_cloud)}`]];
+  return `<div class="row-label">${label}</div><div class="kpis">` +
+    items.map(([l, x]) => `<div class="kpi"><div class="v">${x}</div><div class="l">${l}</div></div>`).join('') + '</div>';
+}
+
+function renderNodes(s) {
+  for (const t of [0, 1, 2]) {
+    document.getElementById('t' + t).innerHTML = s.nodes.filter(n => n.tier === t).map(n => {
+      const run = 100 * n.running / n.cores, q = Math.min(100 - run, 100 * n.queued / (2 * n.cores));
+      return `<div class="node ${n.alive ? '' : 'down'}"><div class="top"><span><span class="dot" style="background:${n.alive ? 'var(--ok)' : 'var(--bad)'}"></span><b>${n.name}</b></span>
+        <span class="muted">${n.ci} g/kWh</span></div>
+        <div class="muted" style="font-size:12px">${n.running}/${n.cores} running · ${n.queued} queued · busy ${n.busy_s}s</div>
+        <div class="bar"><span style="width:${run}%;background:${tierColor[t]}"></span><span style="width:${q}%;background:var(--warn)"></span></div></div>`;
+    }).join('');
+  }
+  if (!nodesInit) {
+    document.getElementById('failNode').innerHTML = s.nodes.filter(n => n.tier > 0).map(n => `<option>${n.name}</option>`).join('');
+    nodesInit = true;
+  }
+}
+
+const layout = (yt, extra = {}) => ({paper_bgcolor: '#182029', plot_bgcolor: '#182029', font: {color: '#e6edf3', size: 11},
+  margin: {l: 45, r: 10, t: 10, b: 35}, xaxis: {title: 'time (s)', gridcolor: '#2a3542'},
+  yaxis: {title: yt, gridcolor: '#2a3542', ...extra}, legend: {orientation: 'h', y: 1.12}});
+const colors = ['#3fb950', '#f0883e', '#58a6ff', '#a371f7'];
+
+async function tick() {
+  const states = await Promise.all(peers.map(p => fetch(p + '/api/state').then(r => r.json()).catch(() => null)));
+  const s = states[0];
+  if (!s) return;
+  document.getElementById('sched').textContent = 'scheduler: ' + s.scheduler;
+  document.getElementById('clock').textContent = 't = ' + s.t.toFixed(0) + ' s';
+  document.getElementById('grid').textContent = 'grid clock ' + Math.floor(s.grid_hour) + ':' + String(Math.floor((s.grid_hour % 1) * 60)).padStart(2, '0');
+  document.getElementById('pref').textContent = s.w == null ? 'heuristic' : `w(SLA)=${s.w.toFixed(2)}` + (s.target != null ? ` · target ${pct(s.target)}` : '');
+  document.getElementById('kpiRows').innerHTML = states.map((x, i) => x ? kpiRow(x, (i ? 'Comparison · ' : '') + x.scheduler) : '').join('');
+  renderNodes(s);
+  const tr = (k, f = x => x) => states.filter(Boolean).map((x, i) => ({x: x.series.map(p => p.t), y: x.series.map(p => f(p[k])),
+    name: x.scheduler, mode: 'lines', line: {color: colors[i], width: 2}}));
+  const sla = tr('sla_AB_recent', y => 100 * y);
+  if (s.target != null) sla.push({x: [0, s.t], y: [100 * s.target, 100 * s.target], name: 'target', mode: 'lines', line: {dash: 'dot', color: '#d29922'}});
+  Plotly.react('slaChart', sla, layout('% missed', {rangemode: 'tozero'}), {displayModeBar: false});
+  Plotly.react('co2Chart', tr('carbon'), layout('gCO₂'), {displayModeBar: false});
+  document.getElementById('dec').innerHTML = s.decisions.map(d => `<tr><td>${d.t}</td><td>${d.job}·${d.cls}${d.task}</td>
+    <td><b>${d.chosen}</b></td><td>${d.budget}</td><td>${d.cands.map(c => `<span class="${c.ok ? '' : 'muted'}">${c.node} ${c.eft}s·${c.gco2.toExponential(1)}${c.ok ? '✓' : ''}</span>`).join(' &nbsp; ')}</td></tr>`).join('');
+  document.getElementById('ev').innerHTML = s.events.slice().reverse().map(e => `<tr><td>${e.t}</td><td class="${e.ev.includes('down') || e.ev.includes('fail') || e.ev.includes('crash') ? 'bad' : ''}">${e.ev}</td><td>${e.node || e.zone || e.value || e.mult || ''}</td></tr>`).join('');
+  if (s.frame && s.frame.job != null) document.getElementById('cam').innerHTML = `last frame: job ${s.frame.job} · <b>${s.frame.boxes}</b> pedestrian(s) detected on <b>${s.frame.node}</b>`;
+}
+setInterval(tick, 1000); tick();
+</script>
+</body>
+</html>

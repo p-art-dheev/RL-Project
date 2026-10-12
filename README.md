@@ -1,6 +1,6 @@
 # PACE: carbon- and SLA-aware edge–cloud scheduling with deep RL
 
-PACE (Preference-conditioned, Adaptive, Carbon-aware Edge scheduler) places every task of a job DAG on an **edge** device (Coimbatore), a **fog** node (AWS Mumbai, carbon-heavy grid, near) or a **cloud** node (AWS Stockholm, clean grid, far), **online and in about 1 ms per decision**. One policy covers the whole SLA-vs-carbon trade-off (`w`), and a feedback controller tracks an operator's SLA target at runtime.
+PACE (Preference-conditioned, Adaptive, Carbon-aware Edge scheduler) places every task of a job DAG on an **edge** device (Coimbatore), a **fog** node (AWS Mumbai, carbon-heavy grid, near) or a **cloud** node (AWS Stockholm, clean grid, far), **online, in about 0.5 ms per decision**. One policy covers the whole SLA-vs-carbon trade-off (`w`), and a feedback controller tracks an operator's SLA target at runtime.
 
 - **Base paper to beat:** MERSEM (Ramicetty et al., arXiv:2605.13489, 2026), re-implemented in `pace/sched/mersem.py`.
 - **RL lineage:** DeepRM (HotNets 2016) for online RL scheduling, and DeepRM2 (2018) for the behaviour-cloning warm start.
@@ -19,7 +19,7 @@ PACE (Preference-conditioned, Adaptive, Carbon-aware Edge scheduler) places ever
 
 - **PACE vs MERSEM:** −12 pp SLA violations and −22% dynamic carbon (Wilcoxon p = 0.002). On the larger city topology: −17 pp and −34%.
 - **PACE + shield vs CA-EFT:** better on alerts, equal on analytics (within the CI), −26% carbon (p = 0.002). Pure PACE misses more large analytics jobs; see `results/RESULTS.md` for the per-class discussion.
-- Under rush hours, node crashes, random failures, 2× load and ±40% runtime-estimate noise, PACE + shield has the fewest violations.
+- Under rush hours, node crashes, random failures, 2× load and ±40% runtime-estimate noise, a PACE variant has the fewest violations in every scenario. PACE + shield beats both CA-EFT and MERSEM in each one, with less carbon than CA-EFT.
 - Carbon intensities are **synthetic** hourly profiles until the Electricity Maps CSVs are added.
 - Real-AWS results (E8) and the sim-to-real check (E9) are produced by `docs/RUNBOOK.md` §4.
 

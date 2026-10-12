@@ -26,12 +26,19 @@ OUT = Path("results/sim")
 MODEL = "models/pace.pt"
 
 
+def _named(s, name):
+    s.name = name
+    return s
+
+
 def methods(names):
     from pace.rl.agent import PACE
     table = {
         "Random": lambda: H.RandomS(), "Edge-only": lambda: H.LocalFirst(), "Fog-only": lambda: H.FogOnly(),
         "Cloud-only": lambda: H.CloudOnly(), "EFT": lambda: H.EFT(), "Carbon-greedy": lambda: H.CarbonGreedy(),
         "CA-EFT": lambda: H.CAEFT(), "Job-EFT": lambda: H.JobEFT(),
+        "CA-EFT(m=0.25)": lambda: _named(H.CAEFT(0.25), "CA-EFT(m=0.25)"), "CA-EFT(m=0.6)": lambda: _named(H.CAEFT(0.6), "CA-EFT(m=0.6)"),
+        "CA-EFT(m=0.8)": lambda: _named(H.CAEFT(0.8), "CA-EFT(m=0.8)"), "CA-EFT(m=1.0)": lambda: _named(H.CAEFT(1.0), "CA-EFT(m=1.0)"),
         "MERSEM-SLA": lambda: MERSEM(1.0), "MERSEM-Balanced": lambda: MERSEM(0.5), "MERSEM-Carbon": lambda: MERSEM(0.0),
         "MERSEM-Balanced-Oracle": lambda: MERSEM(0.5, oracle=True),
         "PACE(w=0.25)": lambda: PACE(MODEL, w=0.25), "PACE(w=0.5)": lambda: PACE(MODEL, w=0.5),
@@ -40,15 +47,22 @@ def methods(names):
         "PACE-target2%": lambda: PACE(MODEL, w=0.5, sla_target=0.02, label="PACE-target2%"),
         "PACE-target5%": lambda: PACE(MODEL, w=0.5, sla_target=0.05, label="PACE-target5%"),
         "PACE-joblevel": lambda: PACE(MODEL, w=0.5, job_level=True, label="PACE-joblevel(w=0.5)"),
+        "PACE+shield(w=0.25)": lambda: PACE(MODEL, w=0.25, shield=True), "PACE+shield(w=0.5)": lambda: PACE(MODEL, w=0.5, shield=True),
+        "PACE+shield(w=0.75)": lambda: PACE(MODEL, w=0.75, shield=True), "PACE+shield(w=0.9)": lambda: PACE(MODEL, w=0.9, shield=True),
+        "PACE+shield(w=1.0)": lambda: PACE(MODEL, w=1.0, shield=True),
+        "PACE+shield-target2%": lambda: PACE(MODEL, w=0.5, sla_target=0.02, shield=True, label="PACE+shield-target2%"),
+        "PACE+shield-target5%": lambda: PACE(MODEL, w=0.5, sla_target=0.05, shield=True, label="PACE+shield-target5%"),
     }
     return {n: table[n] for n in names}
 
 
-CORE = ["Random", "Edge-only", "Fog-only", "Cloud-only", "EFT", "Carbon-greedy", "CA-EFT", "Job-EFT",
+CORE = ["Random", "Edge-only", "Fog-only", "Cloud-only", "EFT", "Carbon-greedy", "Job-EFT",
+        "CA-EFT(m=0.25)", "CA-EFT", "CA-EFT(m=0.6)", "CA-EFT(m=0.8)", "CA-EFT(m=1.0)",
         "MERSEM-SLA", "MERSEM-Balanced", "MERSEM-Carbon", "MERSEM-Balanced-Oracle",
         "PACE(w=0.0)", "PACE(w=0.25)", "PACE(w=0.5)", "PACE(w=0.75)", "PACE(w=0.9)", "PACE(w=1.0)",
-        "PACE-target2%", "PACE-target5%", "PACE-joblevel"]
-KEY = ["EFT", "CA-EFT", "MERSEM-Balanced", "MERSEM-SLA", "PACE(w=0.5)", "PACE(w=0.75)", "PACE-target5%"]
+        "PACE+shield(w=0.25)", "PACE+shield(w=0.5)", "PACE+shield(w=0.75)", "PACE+shield(w=0.9)", "PACE+shield(w=1.0)",
+        "PACE-target5%", "PACE+shield-target5%", "PACE+shield-target2%", "PACE-joblevel"]
+KEY = ["EFT", "CA-EFT", "MERSEM-Balanced", "MERSEM-SLA", "PACE(w=0.9)", "PACE+shield(w=0.9)", "PACE+shield-target5%"]
 
 
 def scenarios(exp: str):
@@ -69,7 +83,7 @@ def scenarios(exp: str):
         yield "E4", "random failures", "testbed", {**base, "fail_rate": 1.0}, KEY
     if exp in ("E5", "all"):
         yield "E5", "rush hour (x2.5 for 15 min)", "testbed", {**base, "bursts": [(1200.0, 900.0, 2.5)]}, \
-            ["CA-EFT", "MERSEM-Balanced", "PACE(w=0.5)", "PACE-target2%", "PACE-target5%"]
+            ["CA-EFT", "MERSEM-Balanced", "PACE+shield(w=0.5)", "PACE+shield-target2%", "PACE+shield-target5%"]
 
 
 def run_one(job):

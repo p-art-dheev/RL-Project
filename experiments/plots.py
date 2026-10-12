@@ -64,9 +64,12 @@ def hv2d(points, ref):
 
 def fig_e1(rows, scen, tag, md):
     g = group(rows, "E1", scen)
-    order = [m for m in ["Random", "Edge-only", "Fog-only", "Cloud-only", "Carbon-greedy", "EFT", "Job-EFT", "CA-EFT",
+    order = [m for m in ["Random", "Edge-only", "Fog-only", "Cloud-only", "Carbon-greedy", "EFT", "Job-EFT",
+                         "CA-EFT(m=1.0)", "CA-EFT(m=0.6)", "CA-EFT", "CA-EFT(m=0.25)",
                          "MERSEM-Carbon", "MERSEM-Balanced", "MERSEM-SLA", "MERSEM-Balanced-Oracle", "PACE-joblevel",
-                         "PACE(w=0.25)", "PACE(w=0.5)", "PACE(w=0.75)", "PACE(w=0.9)", "PACE-target5%", "PACE-target2%"] if m in g]
+                         "PACE(w=0.25)", "PACE(w=0.5)", "PACE(w=0.75)", "PACE(w=0.9)", "PACE(w=1.0)",
+                         "PACE+shield(w=0.5)", "PACE+shield(w=0.75)", "PACE+shield(w=0.9)", "PACE+shield(w=1.0)",
+                         "PACE-target5%", "PACE+shield-target5%", "PACE+shield-target2%"] if m in g]
     fig, ax = plt.subplots(1, 3, figsize=(17, 5.2))
     for i, (key, lab) in enumerate([("sla_A", "Alert (class A) SLA violation %"), ("sla_B", "Analytics (class B) SLA violation %"),
                                     ("carbon_dyn", "Operational carbon, dynamic (gCO2 / hour)")]):
@@ -96,7 +99,7 @@ def fig_e1(rows, scen, tag, md):
     md.append("\n**Paired comparison (Wilcoxon signed-rank over seeds).** Negative Δ = PACE better.\n")
     md.append("| PACE variant | vs | Δ SLA A+B (pp) | p | Δ carbon dyn | p |")
     md.append("|---|---|---|---|---|---|")
-    for p in [m for m in ("PACE(w=0.5)", "PACE(w=0.75)", "PACE-target5%") if m in g]:
+    for p in [m for m in ("PACE(w=0.9)", "PACE+shield(w=0.9)", "PACE+shield(w=1.0)", "PACE+shield-target5%") if m in g]:
         for b in [m for m in ("MERSEM-Balanced", "MERSEM-SLA", "MERSEM-Balanced-Oracle", "CA-EFT", "EFT") if m in g]:
             A = {r["seed"]: r for r in g[p]}
             B = {r["seed"]: r for r in g[b]}
@@ -108,37 +111,49 @@ def fig_e1(rows, scen, tag, md):
             md.append(f"| {p} | {b} | {np.mean(ds):+.2f} | {pv(ds):.3g} | {rel:+.1f}% | {pv(dc):.3g} |")
 
 
+FRONTS = {
+    "PACE (one policy, w sweep)": ("PACE(w=0.0)", "PACE(w=0.25)", "PACE(w=0.5)", "PACE(w=0.75)", "PACE(w=0.9)", "PACE(w=1.0)"),
+    "PACE + shield (w sweep)": ("PACE+shield(w=0.25)", "PACE+shield(w=0.5)", "PACE+shield(w=0.75)", "PACE+shield(w=0.9)",
+                                "PACE+shield(w=1.0)"),
+    "CA-EFT (margin sweep)": ("CA-EFT(m=1.0)", "CA-EFT(m=0.8)", "CA-EFT(m=0.6)", "CA-EFT", "CA-EFT(m=0.25)"),
+    "MERSEM (base paper)": ("MERSEM-Carbon", "MERSEM-Balanced", "MERSEM-SLA"),
+}
+FCOL = {"PACE (one policy, w sweep)": "#1f77b4", "PACE + shield (w sweep)": "#17becf",
+        "CA-EFT (margin sweep)": "#2ca02c", "MERSEM (base paper)": "#d62728"}
+
+
 def fig_pareto(rows, scen, tag, md):
     g = group(rows, "E1", scen)
-    fig, ax = plt.subplots(figsize=(7.5, 5.5))
+    fig, ax = plt.subplots(figsize=(8, 5.8))
     pts = {m: (100 * np.mean([r["sla_AB"] for r in v]), np.mean([r["carbon_dyn"] for r in v])) for m, v in g.items()}
-    pace = [m for m in ("PACE(w=0.0)", "PACE(w=0.25)", "PACE(w=0.5)", "PACE(w=0.75)", "PACE(w=0.9)", "PACE(w=1.0)") if m in pts]
-    mers = [m for m in ("MERSEM-Carbon", "MERSEM-Balanced", "MERSEM-SLA") if m in pts]
-    ax.plot([pts[m][0] for m in pace], [pts[m][1] for m in pace], "o-", color=COL["PACE"], label="PACE (one policy, w sweep)")
-    for m in pace:
-        ax.annotate(m.replace("PACE", ""), pts[m], fontsize=8, xytext=(4, 4), textcoords="offset points")
-    ax.plot([pts[m][0] for m in mers], [pts[m][1] for m in mers], "s--", color=COL["MERSEM"], label="MERSEM (base paper)")
-    for m in mers:
-        ax.annotate(m.replace("MERSEM-", ""), pts[m], fontsize=8, xytext=(4, -10), textcoords="offset points", color=COL["MERSEM"])
-    for m in ("EFT", "CA-EFT", "Carbon-greedy", "Cloud-only", "Fog-only", "Job-EFT"):
-        if m in pts:
-            ax.scatter(*pts[m], marker="^", color=COL.get(m, COL["other"]))
-            ax.annotate(m, pts[m], fontsize=8, xytext=(4, 4), textcoords="offset points")
     allp = list(pts.values())
     ref = (max(p[0] for p in allp) * 1.05 + 1e-9, max(p[1] for p in allp) * 1.05 + 1e-9)
-    hv_p = hv2d([pts[m] for m in pace], ref)
-    hv_m = hv2d([pts[m] for m in mers], ref)
+    hvs = {}
+    for fname, members in FRONTS.items():
+        ms = [m for m in members if m in pts]
+        if not ms:
+            continue
+        ax.plot([pts[m][0] for m in ms], [pts[m][1] for m in ms], "o-", color=FCOL[fname], label=fname, ms=5)
+        for m in ms:
+            short = m.split("(")[-1].rstrip(")") if "(" in m else m.replace("MERSEM-", "").replace("CA-EFT", "m=0.4")
+            ax.annotate(short, pts[m], fontsize=7, xytext=(3, 3), textcoords="offset points", color=FCOL[fname])
+        hvs[fname] = hv2d([pts[m] for m in ms], ref)
+    for m in ("EFT", "Carbon-greedy", "Cloud-only", "Fog-only", "Job-EFT", "MERSEM-Balanced-Oracle", "PACE+shield-target5%"):
+        if m in pts:
+            ax.scatter(*pts[m], marker="^", color="#7f7f7f")
+            ax.annotate(m, pts[m], fontsize=7, xytext=(3, -9), textcoords="offset points")
     ax.set_xlabel("SLA violation rate, classes A+B (%)")
     ax.set_ylabel("Operational carbon, dynamic (gCO2)")
-    ax.set_title(f"Pareto front, {scen}\nhypervolume: PACE {hv_p:.3g} vs MERSEM {hv_m:.3g}", fontsize=10)
+    ax.set_title(f"Trade-off fronts, {scen}\n" + "  ".join(f"{k.split(' (')[0]} HV={v:.3g}" for k, v in hvs.items()),
+                 fontsize=9)
     ax.set_xscale("symlog", linthresh=1)
     ax.grid(alpha=.3)
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(PLOTS / f"pareto_{tag}.png", dpi=130)
     plt.close(fig)
-    md.append(f"\n**Pareto hypervolume ({scen}, ref = 1.05 × worst point):** PACE {hv_p:.4g} vs MERSEM {hv_m:.4g} "
-              f"({100 * (hv_p / max(hv_m, 1e-12) - 1):+.0f}%).\n")
+    md.append(f"\n**Pareto hypervolume ({scen}; minimise SLA% and carbon; ref = 1.05 x worst point; higher is better):** "
+              + ", ".join(f"{k}: {v:.4g}" for k, v in hvs.items()) + "\n")
 
 
 def fig_sweep(rows, exp, xname, parse, fname, md):

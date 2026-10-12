@@ -5,8 +5,9 @@
 Rollouts run in parallel worker processes over domain-randomised topologies and
 workloads (pace.config.randomized); w ~ U[0, 1] is sampled per episode.
 Reward per decision (attributed to the task it placed):
-  r = -[(1 - w) * task_carbon / (task_work * fog_carbon_per_work) + w * job_penalty]
-  job_penalty = miss * (1 + min(1, tardiness / deadline_window))
+  r = -[(1 - w) * task_carbon / (task_work * fog_carbon_per_work) + w * (0.5 * task_penalty + 0.5 * job_penalty)]
+  penalty = late * (1 + min(1, lateness / window)); task_penalty uses the task's sub-deadline
+  (job deadline - estimated remaining critical path), job_penalty the job deadline.
 """
 from __future__ import annotations
 
@@ -39,10 +40,16 @@ def make_sim(seed: int, horizon: float = 1200.0):
 
 
 def _rewards(steps, w, sim):
-    """Per-decision reward: the decision's own task carbon (normalised per unit of work, so
-    ~1 on the near fog, ~0.05 in Stockholm, ~4 on the edge) plus the FULL deadline penalty
-    of the job it belongs to. Spreading the penalty over a job's tasks (v1) drowned the
-    deadline signal for large DAGs and made the policy ignore w."""
+    """Per-decision reward with deadline decomposition.
+
+    carbon : the decision's own task carbon, normalised per unit of work
+             (~1 on the near fog, ~0.05 in Stockholm, ~4 on the edge)
+    SLA    : half from the task's own sub-deadline (job deadline minus the estimated
+             remaining critical path = the latest-finish time the scheduler sees), half
+             from the job outcome. The sub-deadline term is attributable to the single
+             decision; the job term keeps the true objective. Using only the job term
+             (v1/v2) let PPO trade large-DAG deadlines for carbon and ignore w.
+    """
     fog = next((n for n in sim.nodes if n.spec.tier == 1), sim.servers[0])
     c_unit = fog.dyn_w / 3.6e6 * sim.carbon.mean(fog.spec.zone)  # g per reference-core second on the fog
     r = np.zeros(len(steps), np.float32)
@@ -51,9 +58,12 @@ def _rewards(steps, w, sim):
         js = job.spec
         miss = job.finish > js.deadline + 1e-9
         tard = max(0.0, job.finish - js.deadline) / max(js.deadline - js.arrival, 1e-6)
-        pen = float(miss) * (1.0 + min(1.0, tard))
+        pen_job = float(miss) * (1.0 + min(1.0, tard))
+        lf = js.deadline - js.rem_cp[task.i]
+        late = task.end - lf
+        pen_task = float(late > 0) * (1.0 + min(1.0, late / max(lf - js.arrival, 1e-3)))
         carb = task.carbon / (max(task.spec.work, 1e-3) * c_unit)
-        r[i] = -((1 - w) * carb + w * pen)
+        r[i] = -((1 - w) * carb + w * (0.5 * pen_task + 0.5 * pen_job))
     return r
 
 
@@ -136,7 +146,7 @@ def evaluate(net, seeds=(11, 12), w=0.75):
     from .agent import PACE
     out = []
     for sd in seeds:
-        wl = Workload(split="train", horizon=1800, start_hour=10, rate_a=0.25, rate_bc=0.015)
+        wl = Workload(split="train", horizon=1800, start_hour=10, rate_a=0.25, rate_bc=0.02)
         r1 = Simulator(testbed_topology(), wl, seed=sd).run(PACE(net, w=w))
         r2 = Simulator(testbed_topology(), wl, seed=sd).run(CAEFT())
         out.append((r1["sla_A"], r1["sla_B"], r1["carbon_dyn"], r2["sla_A"], r2["sla_B"], r2["carbon_dyn"]))

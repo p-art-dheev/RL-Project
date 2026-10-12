@@ -8,6 +8,21 @@ PACE (Preference-conditioned, Adaptive, Carbon-aware Edge scheduler) places ever
 - **How to run everything (laptop, AWS, demo):** [`docs/RUNBOOK.md`](docs/RUNBOOK.md)
 - **Results:** [`results/RESULTS.md`](results/RESULTS.md) (simulation) and `results/testbed/` (real AWS)
 
+## Headline results (simulation, held-out jobs, 10 paired seeds, testbed topology)
+
+| Method | Alert misses | Analytics misses | All jobs (MERSEM metric) | Dynamic gCO₂ |
+|---|---|---|---|---|
+| MERSEM-Balanced (base paper, re-implemented) | 12.7% | 45.4% | 13.3% | 0.51 |
+| CA-EFT (tuned carbon-aware heuristic) | 2.8% | 5.6% | 2.8% | 0.74 |
+| **PACE, w = 0.9** | **0.9%** | 23.1% | **1.3%** | **0.39** |
+| **PACE + shield, w = 1** | 1.8% | 6.0% | 1.9% | 0.55 |
+
+- **PACE vs MERSEM:** −12 pp SLA violations and −22% dynamic carbon (Wilcoxon p = 0.002). On the larger city topology: −17 pp and −34%.
+- **PACE + shield vs CA-EFT:** better on alerts, equal on analytics (within the CI), −26% carbon (p = 0.002). Pure PACE misses more large analytics jobs; see `results/RESULTS.md` for the per-class discussion.
+- Under rush hours, node crashes, random failures, 2× load and ±40% runtime-estimate noise, PACE + shield has the fewest violations.
+- Carbon intensities are **synthetic** hourly profiles until the Electricity Maps CSVs are added.
+- Real-AWS results (E8) and the sim-to-real check (E9) are produced by `docs/RUNBOOK.md` §4.
+
 ## Layout
 ```
 pace/

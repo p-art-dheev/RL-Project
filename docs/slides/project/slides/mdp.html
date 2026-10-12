@@ -1,0 +1,25 @@
+<section id="mdp" data-transition="fade" style="background:#F6F5F1;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:44px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#2B6CB0;letter-spacing:2px;text-transform:uppercase;font-weight:600">RL formulation</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">One decision each time a task becomes ready</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2B6CB0">State</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Per node: tier, speed for this task type, queue wait, transfer time from parents, grid intensity now and +1 h / +3 h, finish-vs-deadline. Per task: class, work, slack, critical path, remaining job work, w.</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#2B6CB0">Action</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Pick a node, or DEFER a batch task 15 min. Masks remove dead nodes, nodes without memory, and foreign regions for privacy-restricted feeds.</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#DD6B20">Reward</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">r = −[(1−w) · task carbon per unit work, relative to Mumbai + w · (½ task sub-deadline penalty + ½ job deadline penalty)]</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#DD6B20">Learning</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Behaviour cloning of the best heuristic (DeepRM2 idea), then PPO over randomised topologies, loads, noise and failures; w ~ U[0,1] per episode. ~60k parameters, CPU only.</p>
+</div>
+</div>
+<aside>Lesson worth telling: our first reward split each job's deadline penalty across its tasks. A single task decision then almost never changed the outcome of a 25-task job, so the deadline signal was noise and the policy ignored w. Deadline decomposition (each task gets a sub-deadline = job deadline minus its remaining critical path) made the signal attributable to the decision.</aside>
+</section>

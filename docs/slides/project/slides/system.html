@@ -1,0 +1,31 @@
+<section id="system" data-transition="fade" style="background:#F6F5F1;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#2B6CB0;letter-spacing:2px;text-transform:uppercase;font-weight:600">System</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">The same scheduler code runs in simulation and on AWS</h2>
+</div>
+<div style="display:flex;align-items:center;gap:28px">
+<div style="flex:1;display:flex;flex-direction:column;gap:24px">
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:8px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700">Simulator</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Discrete-event model: MERSEM's DAG dataset, transfers, contention, priority queues, failures, carbon</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:8px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700">Live orchestrator</h3>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Runs on the laptop: real HTTP workers, real data movement, measured runtimes, dashboard, failure injection</p>
+</div>
+</div>
+<x-shape kind="arrow-right" style="width:120px;height:60px;background:#2B6CB0"></x-shape>
+<div style="flex:1;background:#14213D;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:16px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:40px;font-weight:700;color:#F6AD55">One decision context</h3>
+<p style="font-size:28px;line-height:1.4;color:#D5E1EE">Task + candidate nodes + grid intensity → scheduler → node or DEFER</p>
+<p style="font-size:28px;line-height:1.4;color:#D5E1EE">Plugged in: PACE · MERSEM (re-implemented) · CA-EFT · EFT · carbon-greedy · edge/fog/cloud-only</p>
+</div>
+<x-shape kind="arrow-right" style="width:120px;height:60px;background:#2B6CB0"></x-shape>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px">
+<p style="font-size:30px;line-height:1.4;color:#1B2333"><b>Workers</b> (Python, numpy, OpenCV)</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Laptop edge ×2 (camera boxes)<br>AWS Mumbai: x86 + ARM<br>AWS Stockholm: x86 + ARM</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">Real work: BLAS kernels for analytics, HOG pedestrian detection on webcam frames</p>
+</div>
+</div>
+<aside>Because both paths build the same decision context, any result in simulation can be re-run on the testbed with the same trace and compared (experiment E9, sim-to-real). Free-plan instance types: c7i-flex.large and t4g.small; total AWS cost for the whole project is under 10 dollars.</aside>
+</section>

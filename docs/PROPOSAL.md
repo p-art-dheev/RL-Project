@@ -29,9 +29,10 @@ Status: design proposal (pre-implementation). Last updated 2026-10-12.
 |---|---|
 | Dataset parser (MERSEM's dataset), workload classes A/B/C, calibrated DES simulator | **Done** (`pace/`) |
 | Baselines: Random, Edge/Fog/Cloud-only, EFT, Carbon-greedy, CA-EFT (tuned), Job-EFT, **MERSEM** (+Oracle) | **Done** |
-| PACE: size-agnostic node-scoring policy, BC warm start, preference-conditioned PPO, masks, DEFER, PI SLA controller | **Done** (`pace/rl/`) |
+| PACE: size-agnostic node-scoring policy, BC warm start, preference-conditioned PPO, masks, DEFER, PI SLA controller, w-dependent safety shield, job-pressure features | **Done** (`pace/rl/`, final model v5) |
+| Class-priority node queues (alerts > analytics > batch), for every method | **Done** (`pace/sim/core.py`, orchestrator) |
 | Real testbed: worker, orchestrator (same scheduler code), dashboard, AWS deploy, calibration, camera, failure injection | **Done** (`testbed/`), deployed by you |
-| Experiments E1–E5 (sim), E8 (real AWS), E9 (sim-to-real) | Scripts done; E1–E5 run here, E8/E9 run on your laptop |
+| Experiments E1–E5 (sim), E8 (real AWS), E9 (sim-to-real) | E1–E5 **done** (`results/RESULTS.md`, 960 runs); E8/E9 scripts ready, run on the laptop |
 | GNN DAG encoder | **Simplified:** DAG structure enters through critical-path and descendant features; the GNN is future work |
 | PPO-Lagrangian variant, DEGRADE action, spot-interruption handling | Not built (COULD tier) |
 | Real carbon traces | Synthetic hourly profiles until the Electricity Maps CSVs are added (`--carbon data/carbon@2024`) |
@@ -41,7 +42,16 @@ Deviations from the plan below, chosen for the 2-day deadline:
 - The edge is the laptop, emulated as a Pi-class camera box: 1 core, ×3 slowdown.
 - Live runs use a time-compressed carbon clock (1 grid hour per minute) so that carbon dynamics are visible in a 10-minute demo.
 
-**Reward as implemented (v2):** `r = −[(1−w)·carbon_task / (work_task · carbon_per_work_fog) + w·penalty_job]`, with a short discount (γ = 0.8). Each decision gets its own task's carbon plus the full deadline penalty of its job. v1 split the penalty across a job's tasks, which drowned the deadline signal for large DAGs and made the policy ignore `w`. We diagnosed this on the test split and fixed it.
+**Reward as implemented (v3 onwards):** `r = −[(1−w)·carbon_task / (work_task · carbon_per_work_fog) + w·(½·penalty_task_subdeadline + ½·penalty_job)]`, with γ = 0.8. The task sub-deadline is the job deadline minus the task's estimated remaining critical path (deadline decomposition).
+
+Development history, kept for the viva:
+- **v1:** the job penalty was split across tasks. The policy ignored `w`.
+- **v2:** the full job penalty went to every task. Credit was still unattributable for large DAGs.
+- **v3:** deadline decomposition. `w` started to matter.
+- **v4:** class-balanced loss. No gain.
+- **v5:** job-pressure features plus priority queues. This is the final model.
+
+The residual weakness, large analytics DAGs under the held-out size shift, is reported in `results/RESULTS.md`. The w-dependent shield closes most of it.
 
 ---
 

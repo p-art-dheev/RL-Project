@@ -1,0 +1,16 @@
+<section id="setup" data-transition="fade" style="background:#F6F5F1;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:44px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#2B6CB0;letter-spacing:2px;text-transform:uppercase;font-weight:600">Experimental setup</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">Same data, same traces, same seeds for every method</h2>
+</div>
+<table style="font-size:28px;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif">
+<tr><th style="width:24%;text-align:left">Item</th><th style="width:76%;text-align:left">Choice</th></tr>
+<tr><td>Workload</td><td>MERSEM's own DAG dataset (Zenodo 4667690): 12,000 jobs sampled; train on the first 70%, test on the held-out last 30%</td></tr>
+<tr style="background:#FFFFFF"><td>Job classes</td><td>A camera alerts (1 s, 30% of feeds privacy-restricted), B analytics (tight), C batch (30–120 min, deferrable)</td></tr>
+<tr><td>Topologies</td><td>Testbed mirror (2 edge, 2 Mumbai, 2 Stockholm nodes) and a larger city (8 edge, 3 Mumbai, 4 Stockholm)</td></tr>
+<tr style="background:#FFFFFF"><td>Baselines</td><td>MERSEM (re-implemented, + an oracle variant), CA-EFT (tuned, 5 margins), EFT, Job-EFT, carbon-greedy, edge/fog/cloud-only, random</td></tr>
+<tr><td>Metrics</td><td>SLA-violation rate (all jobs and per class), dynamic gCO₂, p95 alert latency, hypervolume, decision time</td></tr>
+<tr style="background:#FFFFFF"><td>Statistics</td><td>10 paired seeds (each a different day, hour, workload and carbon trace), mean ± 95% CI, Wilcoxon signed-rank</td></tr>
+</table>
+<aside>Fairness choices we made in MERSEM's favour: it gets oracle knowledge of the next epoch's arrivals, its population is seeded with a greedy mapping, and if its planned node fails we fall back to EFT immediately. We also tuned CA-EFT's safety margin so the strongest simple heuristic is really strong.</aside>
+</section>

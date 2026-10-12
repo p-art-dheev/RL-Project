@@ -1,0 +1,25 @@
+<section id="approach" data-transition="fade" style="background:#14213D;color:#F6F5F1;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#F6AD55;letter-spacing:2px;text-transform:uppercase;font-weight:600">Our contribution</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">PACE: four changes, each aimed at one gap</h2>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+<div style="background:#1E2D4F;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:40px;font-weight:700;color:#F6AD55">N1 · Online, task-level</h3>
+<p style="font-size:30px;line-height:1.4;color:#D5E1EE">A policy scores every candidate node with one shared network, so it works for 5 or 500 nodes and simply masks dead or forbidden ones</p>
+</div>
+<div style="background:#1E2D4F;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:40px;font-weight:700;color:#F6AD55">N2 · One policy, any trade-off</h3>
+<p style="font-size:30px;line-height:1.4;color:#D5E1EE">The SLA weight w is an input, so one trained network covers the whole curve; a PI controller moves w to hold an operator's SLA target</p>
+</div>
+<div style="background:#1E2D4F;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:40px;font-weight:700;color:#F6AD55">N3 · Robust by design</h3>
+<p style="font-size:30px;line-height:1.4;color:#D5E1EE">Trained on noisy runtime estimates, failures, stragglers and bursts; batch work can wait for greener hours; a w-dependent safety shield</p>
+</div>
+<div style="background:#1E2D4F;border-radius:16px;padding:40px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:40px;font-weight:700;color:#F6AD55">N4 · Same code, real machines</h3>
+<p style="font-size:30px;line-height:1.4;color:#D5E1EE">The scheduler that runs in the simulator drives real workers on AWS Mumbai, AWS Stockholm and the laptop edge</p>
+</div>
+</div>
+<aside>Honest positioning: each ingredient has precedents. GNN/DAG RL scheduling: Decima (SIGCOMM 2019). Preference-conditioned multi-objective RL: Abels et al. 2019. PID-Lagrangian constrained RL: Stooke et al. 2020. Carbon-aware temporal shifting: Wiesner et al. 2021. Shielding: Alshiekh et al. 2018. The contribution is the combination for carbon + SLA edge–cloud DAG scheduling, measured against the base paper, plus a real-system check.</aside>
+</section>

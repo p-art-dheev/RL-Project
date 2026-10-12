@@ -65,7 +65,7 @@ Open http://localhost:8080. You should see jobs completing, all nodes green, and
 ## 4. Real-testbed experiment E8 (≈1.5 h unattended)
 
 ```powershell
-python -m experiments.run_testbed --methods pace,mersem,ca-eft,eft,cloud --minutes 6 --seeds 3
+python -m experiments.run_testbed --methods pace-shield,pace,mersem,ca-eft,eft --minutes 6 --seeds 3
 ```
 - Runs are interleaved (A B C D E, A B C D E, …) on the same job and carbon trace per seed.
 - Results go to `results/testbed/e8_*.json`, with a table in `results/testbed/E8_SUMMARY.md`.
@@ -79,8 +79,8 @@ Open 3 terminals, each with `.\.venv\Scripts\Activate.ps1`:
 ```powershell
 # T1: edge workers (camera boxes)
 python -m testbed.local --edges 2
-# T2: PACE with an SLA target of 5%, camera-driven alerts, dashboard on :8080
-python -m testbed.orchestrator --scheduler pace --target 0.05 --camera --minutes 15 --linger
+# T2: PACE (+ safety shield) with an SLA target of 5%, camera-driven alerts, dashboard on :8080
+python -m testbed.orchestrator --scheduler pace-shield --target 0.05 --camera --minutes 15 --linger
 # T3: laptop webcam as camera edge0
 python -m testbed.camera --source 0 --camera edge0 --fps 2
 ```
@@ -106,7 +106,7 @@ Then open `http://localhost:8080/?peer=http://localhost:8081`. Both schedulers a
 
 **Backup if the network fails:** run the whole testbed locally (no AWS) with
 `python -m testbed.local --edges 2 --servers 4` and
-`python -m testbed.orchestrator --nodes testbed/nodes.local.json --scheduler pace`.
+`python -m testbed.orchestrator --nodes testbed/nodes.local.json --scheduler pace-shield`.
 Network delays are not real in this mode, so say that if you use it.
 
 ## 6. Tear down (always!)

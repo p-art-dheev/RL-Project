@@ -5,7 +5,7 @@ It *reuses* the simulator's decision-context builder, job bookkeeping and metric
 in simulation and on AWS. Only the execution mechanics differ: tasks are sent to
 real workers over HTTP, inputs move between real nodes, runtimes are measured.
 
-  python -m testbed.orchestrator --nodes testbed/nodes.json --scheduler pace --minutes 10
+  python -m testbed.orchestrator --nodes testbed/nodes.json --scheduler pace-shield --minutes 10
   open http://localhost:8080  (live dashboard; fault injection, SLA target, carbon spike)
 """
 from __future__ import annotations
@@ -76,11 +76,11 @@ def make_scheduler(a):
     from pace.sched import heuristics as H
     from pace.sched.mersem import MERSEM
     name = a.scheduler.lower()
-    if name == "pace":
+    if name in ("pace", "pace-shield"):
         from pace.rl.agent import PACE
-        return PACE(a.model, w=a.w, sla_target=a.target)
+        return PACE(a.model, w=a.w, sla_target=a.target, shield=name == "pace-shield")
     if name.startswith("mersem"):
-        return MERSEM(w_s=a.w, epoch=a.epoch, gens=15)
+        return MERSEM(w_s=getattr(a, "mersem_w", 0.5), epoch=a.epoch, gens=15)
     table = {"ca-eft": H.CAEFT, "eft": H.EFT, "cloud": H.CloudOnly, "fog": H.FogOnly, "edge": H.LocalFirst,
              "carbon": H.CarbonGreedy, "random": H.RandomS}
     return table[name]()
@@ -479,7 +479,8 @@ def main():
     ap.add_argument("--nodes", default="testbed/nodes.json")
     ap.add_argument("--scheduler", default="pace")
     ap.add_argument("--model", default="models/pace.pt")
-    ap.add_argument("--w", type=float, default=0.5)
+    ap.add_argument("--w", type=float, default=0.9, help="PACE SLA weight (0 = carbon only, 1 = SLA only)")
+    ap.add_argument("--mersem-w", type=float, default=0.5, help="MERSEM w_s (0.5 = MERSEM-Balanced)")
     ap.add_argument("--target", type=float, default=None)
     ap.add_argument("--epoch", type=float, default=120.0, help="MERSEM planning epoch (s)")
     ap.add_argument("--minutes", type=float, default=10)

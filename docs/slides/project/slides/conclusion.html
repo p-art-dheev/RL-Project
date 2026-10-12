@@ -1,0 +1,22 @@
+<section id="conclusion" data-transition="fade" style="background:#14213D;color:#F6F5F1;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;justify-content:space-between">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#F6AD55;letter-spacing:2px;text-transform:uppercase;font-weight:600">Takeaways</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">What we built and what it shows</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:36px">
+<div style="display:flex;gap:32px;align-items:baseline">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;color:#F6AD55;width:90px">1</p>
+<p style="font-size:36px;line-height:1.4;color:#F6F5F1;width:1500px">Online, task-level RL beats the 2026 base paper on its own metric: fewer SLA violations <i>and</i> less carbon, with p = 0.002.</p>
+</div>
+<div style="display:flex;gap:32px;align-items:baseline">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;color:#F6AD55;width:90px">2</p>
+<p style="font-size:36px;line-height:1.4;color:#F6F5F1;width:1500px">With a w-dependent shield it matches a tuned heuristic on analytics deadlines while cutting carbon by about a quarter, and it degrades least under rush hours and failures.</p>
+</div>
+<div style="display:flex;gap:32px;align-items:baseline">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;color:#F6AD55;width:90px">3</p>
+<p style="font-size:36px;line-height:1.4;color:#F6F5F1;width:1500px">The same code schedules real machines in Mumbai and Stockholm from a laptop in Coimbatore, which you are about to see live.</p>
+</div>
+</div>
+<p style="font-size:28px;color:#BFD0E0">Code, data and runbook: github.com/p-art-dheev/RL-Project</p>
+<aside>Close by inviting questions. Likely ones: why RL and not a heuristic (state-dependent trade-offs, a runtime knob, robustness; and we show where the heuristic still wins); is comparing online vs offline fair (oracle MERSEM, generous fallback, job-level PACE control); how is carbon measured on AWS (CPU time × per-vCPU power × PUE × location-based grid intensity).</aside>
+</section>

@@ -1,0 +1,19 @@
+<section id="res-robust" data-transition="fade" style="background:#F6F5F1;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#2B6CB0;letter-spacing:2px;text-transform:uppercase;font-weight:600">Result 3 · under stress</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">Rush hours and node failures hurt PACE least</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:start">
+<table style="width:760px;font-size:28px;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif">
+<tr><th style="width:40%;text-align:left">SLA violations</th><th style="width:20%;text-align:right">PACE+shield</th><th style="width:20%;text-align:right">CA-EFT</th><th style="width:20%;text-align:right">MERSEM</th></tr>
+<tr><td>Rush hour ×2.5</td><td style="text-align:right"><b>2.8%</b></td><td style="text-align:right">4.9%</td><td style="text-align:right">22.0%</td></tr>
+<tr style="background:#FFFFFF"><td>Mumbai node crash + stragglers</td><td style="text-align:right"><b>11.0%</b></td><td style="text-align:right">15.9%</td><td style="text-align:right">26.4%</td></tr>
+<tr><td>Random failures (1/node/h)</td><td style="text-align:right"><b>2.7%</b></td><td style="text-align:right">4.0%</td><td style="text-align:right">18.6%</td></tr>
+<tr style="background:#FFFFFF"><td>2× load</td><td style="text-align:right"><b>4.3%</b></td><td style="text-align:right">7.2%</td><td style="text-align:right">26.3%</td></tr>
+<tr><td>Runtime estimates ±40%</td><td style="text-align:right"><b>1.4%</b></td><td style="text-align:right">3.2%</td><td style="text-align:right">14.0%</td></tr>
+</table>
+<img src="/_blob/cef1a31b772d27b0c1c5707d843559e3" alt="SLA violations over a one-hour run with a 15-minute rush hour: MERSEM peaks above 30 percent, CA-EFT and PACE variants stay much lower" style="width:860px;height:560px;object-fit:contain;background:#FFFFFF;border-radius:16px">
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7280">PACE+shield at w = 0.5–0.9 (2× load row: SLA-target 5% variant); each also uses less dynamic carbon than CA-EFT in that scenario. 5 paired seeds per stress scenario.</p>
+<aside>Why: PACE decides when each task is ready (0.55 ms per decision), so a crashed node is simply masked and its tasks re-placed. MERSEM plans per 15-minute epoch; we even give it an instant greedy fallback when its planned node is down, and it still suffers most.</aside>
+</section>

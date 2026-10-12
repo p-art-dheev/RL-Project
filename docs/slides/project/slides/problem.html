@@ -1,0 +1,29 @@
+<section id="problem" data-transition="fade" style="background:#F6F5F1;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:56px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#2B6CB0;letter-spacing:2px;text-transform:uppercase;font-weight:600">The problem</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">In India, the nearest compute runs on the dirtiest grid</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:40px">
+<p style="font-size:26px;color:#6B46C1;font-weight:600;text-transform:uppercase;letter-spacing:2px">Edge · Coimbatore</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:700">Camera boxes</h3>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">0 ms away, but slow (Raspberry-Pi class) and one task at a time</p>
+<p style="font-size:30px;color:#1B2333"><b>~560 gCO₂/kWh</b> (IN-SO)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:40px">
+<p style="font-size:26px;color:#DD6B20;font-weight:600;text-transform:uppercase;letter-spacing:2px">Fog · AWS Mumbai</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:700">Near region</h3>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">~35 ms round trip, fast x86 + ARM instances</p>
+<p style="font-size:30px;color:#1B2333"><b>~680 gCO₂/kWh</b> (IN-WE)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:40px">
+<p style="font-size:26px;color:#2B6CB0;font-weight:600;text-transform:uppercase;letter-spacing:2px">Cloud · AWS Stockholm</p>
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:44px;font-weight:700">Green region</h3>
+<p style="font-size:30px;line-height:1.4;color:#4A5568">~160 ms round trip, small capacity we rent</p>
+<p style="font-size:30px;color:#1B2333"><b>~35 gCO₂/kWh</b> (SE-SE3): 20× cleaner</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.4;color:#1B2333;width:1600px">Three kinds of smart-city work share it: <b>A</b> safety alerts from cameras (1 s deadline, some feeds may not leave India), <b>B</b> graph analytics DAGs (tight deadlines), <b>C</b> batch analytics (hours of slack). Neither "run local" nor "run green" is right for all of them.</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7280">Grid intensities: approximate annual means, synthetic hourly profiles in this version (Electricity Maps data can be plugged in). RTTs: planning values, replaced by measured ones on the testbed.</p>
+<aside>Why the problem exists: latency pulls work to Mumbai or the edge, carbon pulls it to Stockholm, and capacity in the green region is limited. On top, load is bursty, grid intensity changes hourly, nodes fail and runtimes are only estimates. A plan made 15 minutes ago is stale. That is why we want an online, adaptive scheduler.</aside>
+</section>

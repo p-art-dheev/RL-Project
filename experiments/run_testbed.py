@@ -3,7 +3,7 @@ interleaved (ABCDE ABCDE ...) so drifting network conditions do not favour any m
 Each (seed) replays the identical job trace and carbon trace for every scheduler.
 
   python -m experiments.run_testbed --minutes 6 --seeds 3
-  python -m experiments.run_testbed --methods pace,mersem,ca-eft --minutes 5 --seeds 2
+  python -m experiments.run_testbed --methods pace-shield,mersem,ca-eft --minutes 5 --seeds 2
 """
 from __future__ import annotations
 
@@ -20,11 +20,11 @@ import numpy as np
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--nodes", default="testbed/nodes.json")
-    ap.add_argument("--methods", default="pace,mersem,ca-eft,eft,cloud")
+    ap.add_argument("--methods", default="pace-shield,pace,mersem,ca-eft,eft")
     ap.add_argument("--minutes", type=float, default=6)
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--drain", type=float, default=90)
-    ap.add_argument("--w", type=float, default=0.5)
+    ap.add_argument("--w", type=float, default=0.9, help="PACE SLA weight")
     ap.add_argument("--extra", default="", help="extra args passed to the orchestrator")
     a = ap.parse_args()
     out = Path("results/testbed")

@@ -1,0 +1,21 @@
+<section id="res-heuristic" data-transition="fade" style="background:#F6F5F1;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#2B6CB0;letter-spacing:2px;text-transform:uppercase;font-weight:600">Result 2 · vs the best heuristic</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">With the shield: same analytics SLA as tuned CA-EFT, a quarter less carbon</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:24px;width:780px">
+<table style="font-size:28px;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif">
+<tr><th style="width:40%;text-align:left">Testbed, 10 seeds</th><th style="width:20%;text-align:right">Alerts</th><th style="width:20%;text-align:right">Analytics</th><th style="width:20%;text-align:right">gCO₂</th></tr>
+<tr><td>CA-EFT (tuned)</td><td style="text-align:right">2.8%</td><td style="text-align:right">5.6%</td><td style="text-align:right">0.74</td></tr>
+<tr style="background:#FFFFFF"><td><b>PACE + shield, w=1</b></td><td style="text-align:right"><b>1.8%</b></td><td style="text-align:right">6.0%</td><td style="text-align:right"><b>0.55</b></td></tr>
+<tr><td>PACE, w=0.9</td><td style="text-align:right">0.9%</td><td style="text-align:right">23.1%</td><td style="text-align:right">0.39</td></tr>
+<tr style="background:#FFFFFF"><td>MERSEM-Balanced</td><td style="text-align:right">12.7%</td><td style="text-align:right">45.4%</td><td style="text-align:right">0.51</td></tr>
+</table>
+<p style="font-size:26px;line-height:1.4;color:#4A5568">Carbon −26% (p = 0.002); analytics 6.0% vs 5.6% is within noise (± 6 pp CI). Without the shield, PACE still sends too many large analytics jobs north. CA-EFT alone reaches 3% analytics misses, at higher carbon.</p>
+</div>
+<img src="/_blob/f4d86fb52df4bd1db91dca1f579e2176" alt="Trade-off fronts using class-B analytics misses only: CA-EFT reaches the lowest miss rates; PACE with shield lies on or below CA-EFT between 6 and 20 percent misses" style="width:840px;height:600px;object-fit:contain;background:#FFFFFF;border-radius:16px">
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7280">Shield = drop nodes predicted to miss the task's sub-deadline; strictness follows w (Alshiekh et al., AAAI 2018). The learned policy still picks among the remaining nodes.</p>
+<aside>This is the honest slide. Pure PACE wins on alerts and carbon but loses on large analytics DAGs; held-out jobs are bigger (median 25 tasks vs 15 in training). We diagnosed it: those jobs need 200+ CPU-seconds and the green region has 4 cores. The shield plus job-pressure features fix most of it. Remaining gap at very low miss rates is future work (a GNN job encoder, training on larger DAGs).</aside>
+</section>

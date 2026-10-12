@@ -9,7 +9,7 @@ from ..views import Ctx, carbon_est, est_exec, est_finish
 
 K_MAX = 12  # max candidate nodes (origin edge + servers); extra slot K_MAX = DEFER
 F_N = 18
-F_T = 18
+F_T = 20
 
 
 def featurize(ctx: Ctx, w: float, out_n: np.ndarray | None = None, out_t: np.ndarray | None = None,
@@ -64,4 +64,9 @@ def featurize(ctx: Ctx, w: float, out_n: np.ndarray | None = None, out_t: np.nda
     xt[15] = float(t.retry)
     xt[16] = math.log1p(t.n_desc) / 4.0
     xt[17] = float(t.pinned)
+    # job pressure: total remaining work vs time left and server capacity (critical path alone
+    # under-estimates wide DAGs, which then overload the small green cloud)
+    job_budget = max(t.deadline - ctx.now, 0.05)
+    xt[18] = math.log1p(t.job_rem_work) / 5.0
+    xt[19] = min(t.job_rem_work / (job_budget * max(ctx.cap, 1.0)), 5.0)
     return xn, xt, m

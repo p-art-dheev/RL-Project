@@ -9,3 +9,6 @@ logs/
 models/*_it*.pt
 runs/
 testbed/nodes*.json
+models/pace_v4*.pt
+models/pace_v5*.pt
+models/pace_v*_log.json

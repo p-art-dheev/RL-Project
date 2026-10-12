@@ -23,6 +23,15 @@ COL = {"PACE": "#1f77b4", "MERSEM": "#d62728", "CA-EFT": "#2ca02c", "EFT": "#ff7
 SYN = "carbon: SYNTHETIC hourly profiles (replace with Electricity Maps data)"
 
 
+MCOL = {"CA-EFT": "#2ca02c", "EFT": "#ff7f0e", "MERSEM-Balanced": "#d62728", "MERSEM-SLA": "#8c564b",
+        "PACE(w=0.9)": "#1f77b4", "PACE(w=0.5)": "#1f77b4", "PACE+shield(w=0.9)": "#17becf",
+        "PACE+shield(w=0.5)": "#17becf", "PACE+shield-target5%": "#9467bd", "PACE+shield-target2%": "#e377c2"}
+
+
+def mcol(m):
+    return MCOL.get(m, "#7f7f7f")
+
+
 def fam(m):
     return "PACE" if m.startswith("PACE") else "MERSEM" if m.startswith("MERSEM") else m if m in COL else "other"
 
@@ -122,10 +131,10 @@ FCOL = {"PACE (one policy, w sweep)": "#1f77b4", "PACE + shield (w sweep)": "#17
         "CA-EFT (margin sweep)": "#2ca02c", "MERSEM (base paper)": "#d62728"}
 
 
-def fig_pareto(rows, scen, tag, md):
+def fig_pareto(rows, scen, tag, md, key="sla_AB", label="SLA violation rate, classes A+B (%)"):
     g = group(rows, "E1", scen)
     fig, ax = plt.subplots(figsize=(8, 5.8))
-    pts = {m: (100 * np.mean([r["sla_AB"] for r in v]), np.mean([r["carbon_dyn"] for r in v])) for m, v in g.items()}
+    pts = {m: (100 * np.mean([r[key] for r in v]), np.mean([r["carbon_dyn"] for r in v])) for m, v in g.items()}
     allp = list(pts.values())
     ref = (max(p[0] for p in allp) * 1.05 + 1e-9, max(p[1] for p in allp) * 1.05 + 1e-9)
     hvs = {}
@@ -142,17 +151,17 @@ def fig_pareto(rows, scen, tag, md):
         if m in pts:
             ax.scatter(*pts[m], marker="^", color="#7f7f7f")
             ax.annotate(m, pts[m], fontsize=7, xytext=(3, -9), textcoords="offset points")
-    ax.set_xlabel("SLA violation rate, classes A+B (%)")
+    ax.set_xlabel(label)
     ax.set_ylabel("Operational carbon, dynamic (gCO2)")
-    ax.set_title(f"Trade-off fronts, {scen}\n" + "  ".join(f"{k.split(' (')[0]} HV={v:.3g}" for k, v in hvs.items()),
+    ax.set_title(f"Trade-off fronts, {scen} [{key}]\n" + "  ".join(f"{k.split(' (')[0]} HV={v:.3g}" for k, v in hvs.items()),
                  fontsize=9)
     ax.set_xscale("symlog", linthresh=1)
     ax.grid(alpha=.3)
     ax.legend(fontsize=8)
     fig.tight_layout()
-    fig.savefig(PLOTS / f"pareto_{tag}.png", dpi=130)
+    fig.savefig(PLOTS / f"pareto_{tag}{'' if key == 'sla_AB' else '_' + key}.png", dpi=130)
     plt.close(fig)
-    md.append(f"\n**Pareto hypervolume ({scen}; minimise SLA% and carbon; ref = 1.05 x worst point; higher is better):** "
+    md.append(f"\n**Pareto hypervolume ({scen}, x = {key}; minimise SLA% and carbon; ref = 1.05 x worst point; higher is better):** "
               + ", ".join(f"{k}: {v:.4g}" for k, v in hvs.items()) + "\n")
 
 
@@ -176,7 +185,7 @@ def fig_sweep(rows, exp, xname, parse, fname, md):
             s.append(ci([100 * r["sla_AB"] for r in rs]))
             c.append(ci([r["carbon_dyn"] for r in rs]))
             table[sc][m] = f"{s[-1][0]:.1f}% / {c[-1][0]:.2f}g"
-        col = COL[fam(m)] if fam(m) != "PACE" or m == "PACE(w=0.5)" else "#17becf"
+        col = mcol(m)
         ax[0].errorbar(xs, [a for a, _ in s], yerr=[b for _, b in s], marker="o", label=m, color=col, capsize=3)
         ax[1].errorbar(xs, [a for a, _ in c], yerr=[b for _, b in c], marker="o", label=m, color=col, capsize=3)
     for sc in scen:
@@ -205,7 +214,8 @@ def fig_timeseries(rows, exp, fname, md):
         for m in sorted({r["method"] for r in rows if r["exp"] == exp and r["scenario"] == sc}):
             rs = [r for r in rows if r["exp"] == exp and r["scenario"] == sc and r["method"] == m]
             ts = np.array([json.loads(r["ts_miss"]) for r in rs])
-            ax.plot(np.arange(ts.shape[1]) * 2, 100 * ts.mean(0), label=m, color=COL[fam(m)] if m in ("CA-EFT", "EFT") or fam(m) != "PACE" or m == "PACE(w=0.5)" else None)
+            ax.plot(np.arange(ts.shape[1]) * 2, 100 * ts.mean(0), label=m, color=mcol(m),
+                    lw=2.2 if m.startswith("PACE") else 1.4)
             md.append(f"| {sc} | {m} | {ci([100 * r['sla_AB'] for r in rs])[0]:.2f} | {ci([r['carbon_dyn'] for r in rs])[0]:.3f} |")
         ax.set_title(sc, fontsize=10)
         ax.set_xlabel("job arrival time (min)")
@@ -251,6 +261,7 @@ def main():
         if any(r["exp"] == "E1" and r["scenario"] == scen for r in rows):
             fig_e1(rows, scen, tag, md)
             fig_pareto(rows, scen, tag, md)
+            fig_pareto(rows, scen, tag, md, key="sla_B", label="SLA violation rate, class B analytics only (%)")
     fig_sweep(rows, "E2", "load (class B/C jobs per s)", lambda s: float(s.split("=")[1]), "e2_load.png", md)
     fig_sweep(rows, "E3", "runtime-estimate noise sigma", lambda s: float(s.split("=")[1]), "e3_noise.png", md)
     fig_timeseries(rows, "E4", "e4_failures.png", md)

@@ -98,7 +98,7 @@ class LiveOrchestrator(Simulator):
         self.start_hour = wl.start_hour if wl.start_hour is not None else 10.0
         self.carbon.set_start(int(self.start_hour))
         self.time_scale = time_scale
-        self.nodes = [SNode(s, i) for i, s in enumerate(topo.nodes)]
+        self.nodes = [SNode(s, i, wl.priority) for i, s in enumerate(topo.nodes)]
         self.by_name = {n.spec.name: n for n in self.nodes}
         self.servers = [n for n in self.nodes if n.spec.tier != EDGE]
         if camera:
@@ -167,7 +167,10 @@ class LiveOrchestrator(Simulator):
         task.state = 2
         task.ver += 1
         node.queue.append(task)
-        node.backlog += task.spec.work_est / node.spec.speed[task.spec.typ]
+        b = task.spec.work_est / node.spec.speed[task.spec.typ]
+        node.backlog += b
+        node.backlog_cls[task.job.spec.cls] += b
+        node.count_cls[task.job.spec.cls] += 1
         self._pump(node)
 
     def _wake(self, task, ver):
@@ -190,6 +193,9 @@ class LiveOrchestrator(Simulator):
             task = node.queue.popleft()
             sp = node.spec.speed[task.spec.typ]
             node.backlog = max(0.0, node.backlog - task.spec.work_est / sp)
+            c = task.job.spec.cls
+            node.backlog_cls[c] = max(0.0, node.backlog_cls[c] - task.spec.work_est / sp)
+            node.count_cls[c] = max(0, node.count_cls[c] - 1)
             task.state = RUNNING
             task.start = self.now
             task.est_end = self.now + task.spec.work_est / sp
@@ -244,6 +250,7 @@ class LiveOrchestrator(Simulator):
         task.state = DONE
         job = task.job
         job.n_done += 1
+        job.rem_work = max(0.0, job.rem_work - task.spec.work_est)
         if js.cls == 0 and res.get("boxes") is not None and task.spec.typ == "vision" and task.i == 1:
             self.last_frame = dict(job=js.id, boxes=res["boxes"], node=node.spec.name)
         for v in js.succs[task.i]:
@@ -271,6 +278,8 @@ class LiveOrchestrator(Simulator):
         node.running.clear()
         node.queue.clear()
         node.backlog = 0.0
+        node.backlog_cls = [0.0, 0.0, 0.0]
+        node.count_cls = [0, 0, 0]
         for t in lost:
             t.ver += 1
             t.state = READY

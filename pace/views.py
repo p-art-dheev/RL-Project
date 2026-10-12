@@ -29,6 +29,7 @@ class TaskView:
     retry: bool
     arrival: float
     n_tasks: int
+    job_rem_work: float = 0.0  # estimated work of the job's unfinished tasks (ref-core seconds)
 
 
 @dataclass(slots=True)
@@ -63,6 +64,7 @@ class Ctx:
     sla_recent: float  # EWMA of recent class A/B misses
     c_ref: float  # reference carbon (g) of an average job of this class on the near fog
     extra: dict = field(default_factory=dict)
+    cap: float = 1.0  # alive server cores (fog + cloud)
 
 
 def est_exec(t: TaskView, n: NodeView) -> float:

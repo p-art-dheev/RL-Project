@@ -30,6 +30,39 @@ PENDING, READY, PLACED, RUNNING, DONE = range(5)
 DEFER_DT = 900.0
 
 
+class PrioQueue:
+    """Non-preemptive class-priority queue (A alerts > B analytics > C batch), FIFO within a
+    class, like Kubernetes PriorityClasses / YARN queues. With priority off it is plain FIFO."""
+    __slots__ = ("q", "prio")
+
+    def __init__(self, prio: bool = True):
+        self.q = (deque(), deque(), deque())
+        self.prio = prio
+
+    def append(self, task):
+        self.q[task.job.spec.cls if self.prio else 0].append(task)
+
+    def popleft(self):
+        for d in self.q:
+            if d:
+                return d.popleft()
+        raise IndexError("empty queue")
+
+    def __len__(self):
+        return len(self.q[0]) + len(self.q[1]) + len(self.q[2])
+
+    def __bool__(self):
+        return bool(self.q[0] or self.q[1] or self.q[2])
+
+    def __iter__(self):
+        for d in self.q:
+            yield from d
+
+    def clear(self):
+        for d in self.q:
+            d.clear()
+
+
 class STask:
     __slots__ = ("job", "i", "spec", "node", "state", "ver", "start", "end", "est_end", "carbon", "energy",
                  "n_pending", "defer_count", "n_decisions", "retry")
@@ -48,7 +81,7 @@ class STask:
 
 
 class SJob:
-    __slots__ = ("spec", "tasks", "n_done", "finish", "carbon", "done", "origin")
+    __slots__ = ("spec", "tasks", "n_done", "finish", "carbon", "done", "origin", "rem_work")
 
     def __init__(self, spec: JobSpec, origin: int):
         self.spec = spec
@@ -60,17 +93,20 @@ class SJob:
         self.carbon = 0.0
         self.done = False
         self.origin = origin
+        self.rem_work = sum(t.work_est for t in spec.tasks)
 
 
 class SNode:
-    __slots__ = ("spec", "idx", "alive", "running", "queue", "transit", "slow", "backlog", "down_total",
-                 "down_since", "dyn_w", "busy_s")
+    __slots__ = ("spec", "idx", "alive", "running", "queue", "transit", "slow", "backlog", "backlog_cls",
+                 "count_cls", "down_total", "down_since", "dyn_w", "busy_s")
 
-    def __init__(self, spec, idx):
+    def __init__(self, spec, idx, prio: bool = True):
         self.spec, self.idx = spec, idx
         self.alive = True
         self.running: set = set()
-        self.queue: deque = deque()
+        self.queue = PrioQueue(prio)
+        self.backlog_cls = [0.0, 0.0, 0.0]  # est seconds queued/in transit per class
+        self.count_cls = [0, 0, 0]  # number of tasks queued/in transit per class
         self.transit: set = set()
         self.slow = 1.0
         self.backlog = 0.0  # est seconds of queued + in-transit work on this node
@@ -94,7 +130,7 @@ class Simulator:
             self.carbon.set_start(int(start_hour) + 24 * int(self.rng.integers(0, days - 1)))
         else:  # real traces are indexed by UTC hour; start_hour is local time in India (UTC+5:30)
             self.carbon.set_start(int((start_hour - 5.5) % 24) + 24 * int(self.rng.integers(0, days - 1)))
-        self.nodes = [SNode(s, i) for i, s in enumerate(topo.nodes)]
+        self.nodes = [SNode(s, i, wl.priority) for i, s in enumerate(topo.nodes)]
         self.by_name = {n.spec.name: n for n in self.nodes}
         self.servers = [n for n in self.nodes if n.spec.tier != EDGE]
         self.job_specs = jobs if jobs is not None else generate(topo, wl, self.rng, start_hour)
@@ -143,12 +179,16 @@ class Simulator:
             tx *= math.exp(self.rng.normal(0.0, 0.2))
         return rtt / 2.0 + tx
 
-    def est_wait(self, n: SNode) -> float:
-        occ = len(n.running) + len(n.queue) + len(n.transit)
-        if occ < n.spec.cores:
+    def est_wait(self, n: SNode, cls: int = 2) -> float:
+        """Expected wait for a task of class `cls`: running work plus queued/in-transit work of
+        classes served before it (all classes when queues are FIFO)."""
+        prio = n.queue.prio
+        ahead = sum(n.count_cls[: cls + 1]) if prio else sum(n.count_cls)
+        if len(n.running) + ahead < n.spec.cores:
             return 0.0
         rem = sum(max(0.0, t.est_end - self.now) for t in n.running)
-        return (rem + n.backlog) / n.spec.cores
+        back = n.backlog if not prio else sum(n.backlog_cls[: cls + 1])
+        return (rem + back) / n.spec.cores
 
     def _input_transfer(self, task: STask, node: SNode, jitter: bool) -> float:
         job = task.job
@@ -206,7 +246,7 @@ class Simulator:
         lf = js.deadline - js.rem_cp[task.i] - 0.05
         tv = TaskView(task.i, js.id, js.cls, sp.typ, sp.work_est, sp.mem, js.deadline, lf, js.rem_cp[task.i],
                       js.n_desc[task.i], js.privacy, js.deferrable, task.defer_count, sp.pinned, task.retry,
-                      js.arrival, len(job.tasks))
+                      js.arrival, len(job.tasks), job.rem_work)
         origin = self.nodes[job.origin]
         cands = [origin] + self.servers
         ct = self.topo.country
@@ -221,7 +261,7 @@ class Simulator:
                 allowed = False
             ci = self.carbon.at(s.zone, tod_t)
             nvs.append(NodeView(n.idx, s.name, s.tier, s.loc, n.alive, s.cores, len(n.running),
-                                len(n.queue) + len(n.transit), self.est_wait(n) if n.alive else 1e4,
+                                len(n.queue) + len(n.transit), self.est_wait(n, js.cls) if n.alive else 1e4,
                                 s.speed[sp.typ],  # stragglers are hidden state
                                 self._input_transfer(task, n, False), ci,
                                 self.carbon.forecast(s.zone, tod_t, 1.0, self.rng),
@@ -232,7 +272,7 @@ class Simulator:
         busy = sum(len(n.running) for n in self.servers)
         cap = sum(n.spec.cores for n in self.servers if n.alive) or 1
         tod = (self.start_hour + self.now / 3600.0) % 24.0
-        return Ctx(self.now, tv, nvs, can_defer, tod, busy / cap, self.sla_ewma, self.c_ref[js.cls])
+        return Ctx(self.now, tv, nvs, can_defer, tod, busy / cap, self.sla_ewma, self.c_ref[js.cls], cap=float(cap))
 
     # ------------------------------------------------------------------ mechanics
     def _place(self, task: STask, node: SNode) -> None:
@@ -240,7 +280,10 @@ class Simulator:
         task.state = PLACED
         task.ver += 1
         node.transit.add(task)
-        node.backlog += task.spec.work_est / node.spec.speed[task.spec.typ]
+        b = task.spec.work_est / node.spec.speed[task.spec.typ]
+        node.backlog += b
+        node.backlog_cls[task.job.spec.cls] += b
+        node.count_cls[task.job.spec.cls] += 1
         self._push(self.now + self._input_transfer(task, node, True), DATA, task, task.ver)
 
     def _start(self, task: STask, node: SNode) -> None:
@@ -254,6 +297,9 @@ class Simulator:
         task.state = RUNNING
         node.running.add(task)
         node.backlog = max(0.0, node.backlog - task.spec.work_est / sp)
+        c = task.job.spec.cls
+        node.backlog_cls[c] = max(0.0, node.backlog_cls[c] - task.spec.work_est / sp)
+        node.count_cls[c] = max(0, node.count_cls[c] - 1)
         self._push(task.end, FINISH, task, task.ver)
 
     def _try_start(self, node: SNode) -> None:
@@ -295,6 +341,7 @@ class Simulator:
             task.state = DONE
             job = task.job
             job.n_done += 1
+            job.rem_work = max(0.0, job.rem_work - task.spec.work_est)
             succs = job.spec.succs[task.i]
             for v in succs:
                 st = job.tasks[v]
@@ -324,6 +371,8 @@ class Simulator:
             node.queue.clear()
             node.transit.clear()
             node.backlog = 0.0
+            node.backlog_cls = [0.0, 0.0, 0.0]
+            node.count_cls = [0, 0, 0]
             for t in lost:
                 t.ver += 1
                 t.state = READY

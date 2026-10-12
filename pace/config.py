@@ -110,6 +110,7 @@ class Workload:
     fail_rate: float = 0.0  # random failures per server-node per hour
     straggle_rate: float = 0.0  # random slow-down episodes per node per hour
     carbon_source: str = "synthetic"  # or a directory of Electricity Maps CSVs
+    priority: bool = True  # class-priority node queues (A > B > C); False = FIFO (ablation)
 
 
 def randomized(base_topo: Topology, wl: Workload, rng) -> tuple[Topology, Workload]:

@@ -9,7 +9,7 @@ import torch
 
 from ..sched.heuristics import Scheduler
 from ..views import DEFER, Ctx, est_finish
-from .features import K_MAX, featurize
+from .features import F_N, F_T, K_MAX, featurize
 from .model import PACENet
 
 
@@ -39,8 +39,8 @@ class PACE(Scheduler):
         self.shield = shield
         self.name = label or ((f"PACE(target={sla_target:.0%})" if sla_target is not None else f"PACE(w={w})")
                               + ("+shield" if shield else ""))
-        self._xn = np.zeros((1, K_MAX, 18), np.float32)
-        self._xt = np.zeros((1, 18), np.float32)
+        self._xn = np.zeros((1, K_MAX, F_N), np.float32)
+        self._xt = np.zeros((1, F_T), np.float32)
         self._m = np.zeros((1, K_MAX + 1), np.bool_)
         self.decide_s = 0.0
         self.n_dec = 0

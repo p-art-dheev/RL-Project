@@ -1,5 +1,6 @@
 """Create / inspect / destroy the PACE AWS testbed (works on the AWS Free plan).
 
+  python -m testbed.aws check     # credentials, permissions, instance types: launches nothing
   python -m testbed.aws up        # 2 workers in ap-south-1 (fog) + 2 in eu-north-1 (cloud)
   python -m testbed.aws status    # list instances, health-check workers
   python -m testbed.aws down      # terminate everything tagged project=pace, delete security groups
@@ -23,7 +24,7 @@ import urllib.request
 from pathlib import Path
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 
 ROOT = Path(__file__).resolve().parent
 TAG = {"Key": "project", "Value": "pace"}
@@ -209,6 +210,33 @@ def stop(_a) -> None:
             print("stopped", ids)
 
 
+def check(_a) -> None:
+    """Verify credentials, permissions and Free-plan instance types without launching anything."""
+    try:
+        ident = boto3.client("sts").get_caller_identity()
+    except (ClientError, NoCredentialsError) as e:
+        raise SystemExit(f"AWS credentials not working ({e.__class__.__name__}: {e}).\n"
+                         "Check C:\\Users\\<you>\\.aws\\credentials (no .txt ending, [default] header, "
+                         "no spaces inside the keys) - see docs/RUNBOOK.md section 1.")
+    print("credentials OK:", ident["Arn"])
+    print("laptop public IP:", my_ip())
+    ok = True
+    for region, *_r in SITES:
+        ec2 = boto3.client("ec2", region_name=region)
+        vpcs = ec2.describe_vpcs(Filters=[{"Name": "isDefault", "Values": ["true"]}])["Vpcs"]
+        print(f"{region}: default VPC {'OK' if vpcs else 'MISSING'}")
+        ok &= bool(vpcs)
+        for arch, types in TYPES.items():
+            offered = {o["InstanceType"] for o in ec2.describe_instance_type_offerings(
+                Filters=[{"Name": "instance-type", "Values": types}])["InstanceTypeOfferings"]}
+            usable = [t for t in types if t in offered]
+            print(f"  {arch}: {', '.join(usable) or 'none of ' + ', '.join(types)}")
+            ok &= bool(usable)
+        boto3.client("ssm", region_name=region).get_parameter(Name=AMI["x86"])
+        print("  AMI lookup OK")
+    print("\nAll checks passed. Next: python -m testbed.aws up" if ok else "\nSome checks failed; see above.")
+
+
 def allow(_a) -> None:
     """Re-authorise this laptop after its public IP changed (e.g. home -> college Wi-Fi)."""
     ip = my_ip()
@@ -241,11 +269,12 @@ def start(_a) -> None:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["up", "status", "down", "stop", "start", "allow"])
+    ap.add_argument("cmd", choices=["check", "up", "status", "down", "stop", "start", "allow"])
     ap.add_argument("--edges", type=int, default=2, help="edge workers on the laptop")
     ap.add_argument("--pool", default="a", help="second pool 'b' for a live side-by-side (A/B) demo")
     a = ap.parse_args()
-    {"up": up, "status": status, "down": down, "stop": stop, "start": start, "allow": allow}[a.cmd](a)
+    {"check": check, "up": up, "status": status, "down": down, "stop": stop, "start": start,
+     "allow": allow}[a.cmd](a)
 
 
 if __name__ == "__main__":

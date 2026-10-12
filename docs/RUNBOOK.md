@@ -17,23 +17,43 @@ Budget: the whole plan uses **< $10** of the $100 Free-plan credit.
    pip install -r requirements.txt
    ```
    The policy is about 60K parameters, so the CPU build of PyTorch is enough. The RTX 3050 is optional.
-3. Sanity check (≈1 min, no AWS needed):
+3. Sanity check (≈30 s, no AWS needed), from the `RL-Project` folder with the venv active:
    ```powershell
-   python -c "from pace.config import *; from pace.sim.core import Simulator; from pace.sched.heuristics import CAEFT; print(Simulator(testbed_topology(), Workload(horizon=600)).run(CAEFT())['sla_AB'])"
+   python -m experiments.smoke
    ```
+   It lists the installed packages, then simulates 10 minutes with CA-EFT, MERSEM and PACE + shield. It should end with `Setup OK`.
 
-## 1. AWS access (10 min, once)
+## 1. AWS access (≈15 min, once)
 
-1. AWS console → **IAM → Users → Create user** `pace-cli`. Under "Attach policies directly", add **AmazonEC2FullAccess** and **AmazonSSMReadOnlyAccess**.
-2. Open the user → **Security credentials → Create access key → "Command Line Interface"** and copy both keys.
-3. Create `C:\Users\<you>\.aws\credentials` (the `aws configure` CLI command does the same):
-   ```ini
-   [default]
-   aws_access_key_id = AKIA...
-   aws_secret_access_key = ...
-   ```
-   Never commit these keys or paste them into chat.
-4. **Billing → Budgets**: create a cost budget with alerts at $20 / $40 / $60. On the Free plan, running out of credit **closes the account**, so the alerts protect the testbed.
+**a) Create a user for the scripts** (never use the root account's keys):
+1. Sign in at https://console.aws.amazon.com with your account email. Open **IAM** (search bar → "IAM"); IAM is global, so the region doesn't matter.
+2. **Users → Create user** → name `pace-cli` → leave "Provide user access to the AWS Management Console" **unticked** → Next.
+3. **Attach policies directly** → search and tick **AmazonEC2FullAccess** and **AmazonSSMReadOnlyAccess** → Next → **Create user**.
+4. Open `pace-cli` → **Security credentials** tab → **Create access key** → use case **Command Line Interface (CLI)** → tick the confirmation → Next → **Create access key**.
+5. Copy the **Access key ID** and **Secret access key**, or click **Download .csv file**. The secret is shown only once. Never paste it into chat or commit it.
+
+**b) Store the key on the laptop** (PowerShell, replace the two values):
+```powershell
+mkdir $HOME\.aws -Force
+@"
+[default]
+aws_access_key_id = AKIA_REPLACE_ME
+aws_secret_access_key = REPLACE_ME
+"@ | Set-Content -Path $HOME\.aws\credentials -Encoding ascii
+@"
+[default]
+region = ap-south-1
+"@ | Set-Content -Path $HOME\.aws\config -Encoding ascii
+```
+The files must be named exactly `credentials` and `config`, with no `.txt` ending; this command takes care of that.
+
+**c) Check it** (launches nothing, costs nothing):
+```powershell
+python -m testbed.aws check
+```
+It should show `credentials OK: arn:aws:iam::...:user/pace-cli`, a default VPC and usable instance types in **ap-south-1** and **eu-north-1**, and end with `All checks passed`.
+
+**d) Budget alert** (2 min): console search bar → **Billing and Cost Management** → **Budgets** → **Create budget** → *Use a template* → **Monthly cost budget** → amount **$20** → your email → Create. Your remaining credit is under **Billing → Credits**. On the Free plan, running out of credit **closes the account**, so the alert protects the testbed. This project should use under $10.
 
 ## 2. Bring up the testbed (≈5 min)
 

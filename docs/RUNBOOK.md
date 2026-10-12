@@ -12,7 +12,6 @@ Budget: the whole plan uses **< $10** of the $100 Free-plan credit.
    ```powershell
    git clone https://github.com/p-art-dheev/RL-Project.git
    cd RL-Project
-   git checkout claude/cool-hamilton-7sgprk
    python -m venv .venv
    .\.venv\Scripts\Activate.ps1          # if blocked: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
    pip install -r requirements.txt
@@ -70,7 +69,7 @@ python -m experiments.run_testbed --methods pace-shield,pace,mersem,ca-eft,eft -
 - Runs are interleaved (A B C D E, A B C D E, …) on the same job and carbon trace per seed.
 - Results go to `results/testbed/e8_*.json`, with a table in `results/testbed/E8_SUMMARY.md`.
 - Keep the laptop plugged in and stop it from sleeping: Settings → Power → Screen and sleep → Never.
-- Commit `results/testbed/` afterwards (or send the folder to Claude) so it ends up in the report.
+- Commit and push `results/testbed/` afterwards so it ends up in the report.
 
 ## 5. Live demo for the professor (≈10 min)
 

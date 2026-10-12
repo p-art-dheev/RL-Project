@@ -32,10 +32,16 @@ from .model import PACENet
 GAMMA, LAM = 0.8, 0.9  # short horizon: a decision is judged mainly by its own job
 
 
+B_HEAVY = 0.0  # probability of a class-B-heavy, congested episode (set by --b-heavy)
+
+
 def make_sim(seed: int, horizon: float = 1200.0):
     rng = np.random.default_rng(seed)
     topo, wl = randomized(testbed_topology(), Workload(split="train"), rng)
     wl.horizon = horizon
+    if rng.random() < B_HEAVY:  # analytics jobs are a small share of decisions; oversample them
+        wl.frac_b = 0.85
+        wl.rate_bc *= float(rng.uniform(1.0, 1.6))
     return Simulator(topo, wl, seed=seed)
 
 
@@ -80,14 +86,16 @@ def _gae(r, v):
 
 def rollout_worker(args):
     """Run episodes with the given policy until >= n_steps decisions; return training arrays."""
-    state, n_steps, seed, mode = args
+    state, n_steps, seed, mode, b_heavy = args
+    global B_HEAVY
+    B_HEAVY = b_heavy
     torch.set_num_threads(1)
     net = PACENet()
     if state is not None:
         net.load_state_dict(state)
     net.eval()
     rng = np.random.default_rng(seed)
-    buf = {k: [] for k in ("xn", "xt", "m", "a", "logp", "adv", "ret")}
+    buf = {k: [] for k in ("xn", "xt", "m", "a", "logp", "adv", "ret", "cls")}
     stats = []
     teacher = CAEFT()
     total = 0
@@ -129,6 +137,7 @@ def rollout_worker(args):
         buf["logp"].append(np.asarray(logps, np.float32))
         buf["adv"].append(adv)
         buf["ret"].append(ret)
+        buf["cls"].append(np.asarray([t.job.spec.cls for t in tasks], np.int64))
         stats.append(dict(w=w, steps=len(acts), R=float(r.sum()), sla_AB=s["sla_AB"], sla_B=s["sla_B"],
                           co2n=s["carbon_dyn"] / max(1e-12, sum(sim.c_ref[rr["cls"]] for rr in sim.records)),
                           defer=s["deferrals"]))
@@ -163,6 +172,8 @@ def main():
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--out", default="models/pace.pt")
     ap.add_argument("--init", default=None)
+    ap.add_argument("--b-heavy", type=float, default=0.0, help="share of class-B-heavy training episodes")
+    ap.add_argument("--class-balance", action="store_true", help="equal PPO loss weight per job class")
     a = ap.parse_args()
     torch.manual_seed(0)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
@@ -178,7 +189,7 @@ def main():
         # ---------------- behaviour cloning warm start (DeepRM2 idea) ----------------
         if not a.init:
             for it in range(a.bc_iters):
-                res = pool.map(rollout_worker, [(None, a.steps, seed + i, "bc") for i in range(a.workers)])
+                res = pool.map(rollout_worker, [(None, a.steps, seed + i, "bc", 0.0) for i in range(a.workers)])
                 seed += a.workers
                 data, _ = _merge(res)
                 n = len(data["a"])
@@ -203,7 +214,7 @@ def main():
         it = 0
         while time.time() - t_start < a.minutes * 60:
             state = {k: v.clone() for k, v in net.state_dict().items()}
-            res = pool.map(rollout_worker, [(state, a.steps, seed + i, "ppo") for i in range(a.workers)])
+            res = pool.map(rollout_worker, [(state, a.steps, seed + i, "ppo", a.b_heavy) for i in range(a.workers)])
             seed += a.workers
             data, stats = _merge(res)
             n = len(data["a"])
@@ -213,6 +224,13 @@ def main():
             adv = torch.from_numpy(data["adv"])
             ret = torch.from_numpy(data["ret"])
             adv = (adv - adv.mean()) / (adv.std() + 1e-8)
+            cls = torch.from_numpy(data["cls"])
+            wts = torch.ones(n)
+            if a.class_balance:
+                counts = torch.bincount(cls, minlength=3).float().clamp(min=1)
+                present = (counts > 1).sum()
+                wts = (n / (present * counts))[cls]  # each present class gets equal total weight
+                wts = wts / wts.mean()
             ent_coef = max(0.002, 0.01 * (1 - (time.time() - t_start) / (a.minutes * 60)))
             for _ep in range(a.epochs):
                 perm = torch.randperm(n)
@@ -222,7 +240,7 @@ def main():
                     dist = torch.distributions.Categorical(logits=logits)
                     lp = dist.log_prob(act[b])
                     ratio = torch.exp(lp - old_lp[b])
-                    pg = -torch.min(ratio * adv[b], torch.clamp(ratio, 0.8, 1.2) * adv[b]).mean()
+                    pg = -(wts[b] * torch.min(ratio * adv[b], torch.clamp(ratio, 0.8, 1.2) * adv[b])).mean()
                     vl = F.mse_loss(v, ret[b])
                     ent = dist.entropy().mean()
                     loss = pg + 0.5 * vl - ent_coef * ent

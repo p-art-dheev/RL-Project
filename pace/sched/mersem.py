@@ -94,13 +94,14 @@ class MERSEM(Scheduler):
             work = [t.work if self.oracle else t.work_est for t in j.tasks if not t.pinned]
             W = sum(work)
             cp = _cp(j, self.oracle)
+            depth = _depth(j)  # controller round trips in sequence (0 unless the topology has a controller)
             ex, co, ca = [], [], []
             for c in cs:
                 n = nodes[c]
                 sp = n.spec.speed["vision" if j.cls == 0 else "generic"]
                 ex.append(max(cp, W / n.spec.cores) / sp)
                 tx = 0.0 if n is origin else sim.transfer(origin, n, max(j.input_mb, 0.1 if j.cls == 0 else 0), False) \
-                    + sim.transfer(n, origin, j.result_mb, False)
+                    + sim.transfer(n, origin, j.result_mb, False) + depth * sim._ctrl(n)
                 co.append(tx)
                 ca.append(n.dyn_w * W / sp / 3.6e6 * sim.carbon.at(n.spec.zone, j.arrival))
             cand.append(cs)
@@ -202,7 +203,12 @@ class MERSEM(Scheduler):
         return best_g, best_f
 
 
-def _cp(j, oracle):
+def _depth(j):
+    """Number of non-pinned tasks on the longest path (task dispatches in sequence)."""
+    return int(round(_cp(j, True, unit=True)))
+
+
+def _cp(j, oracle, unit=False):
     n = len(j.tasks)
     down = [0.0] * n
     order = []
@@ -216,7 +222,7 @@ def _cp(j, oracle):
             if indeg[v] == 0:
                 st.append(v)
     for u in reversed(order):
-        w = 0.0 if j.tasks[u].pinned else (j.tasks[u].work if oracle else j.tasks[u].work_est)
+        w = 0.0 if j.tasks[u].pinned else (1.0 if unit else j.tasks[u].work if oracle else j.tasks[u].work_est)
         down[u] = w + max((down[v] for v in j.succs[u]), default=0.0)
     return max(down) if n else 0.0
 

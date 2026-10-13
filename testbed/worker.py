@@ -1,11 +1,13 @@
 """PACE testbed worker: executes real tasks on an edge device, fog or cloud node.
 
 Runs on every EC2 instance and on the laptop (edge). Pure Python + numpy (+ OpenCV
-for the vision task if installed). One task per core; concurrency is controlled by
-the orchestrator, which never sends more than `cores` tasks at once.
+for the vision task if installed). The orchestrator sends a task as soon as it is placed;
+the worker fetches its inputs straight away and runs at most `cores` tasks at once, starting
+waiting tasks in class-priority order (A alerts > B analytics > C batch), so data transfers
+overlap with computation as in the scheduler's model.
 
 Endpoints (all require header X-Token: $PACE_TOKEN):
-  POST /run         execute a task (fetch inputs, compute, store output)
+  POST /run         execute a task (fetch inputs, wait for a core by priority, compute, store output)
   GET  /blob/{key}  download a stored task output (used by downstream tasks)
   GET  /status      liveness + load
   GET  /calibrate   measure this node's speed for each task type
@@ -28,6 +30,7 @@ import argparse  # noqa: E402
 import asyncio  # noqa: E402
 import base64  # noqa: E402
 import collections  # noqa: E402
+import heapq  # noqa: E402
 import time  # noqa: E402
 from concurrent.futures import ProcessPoolExecutor  # noqa: E402
 
@@ -97,9 +100,41 @@ def execute(typ: str, work: float, frame: bytes | None) -> tuple[float, int]:
     return _generic(work), 0
 
 
+class PrioGate:
+    """At most `n` tasks compute at once; waiting tasks start by (priority, arrival)."""
+
+    def __init__(self, n: int):
+        self.free = n
+        self.waiting: list = []
+        self.seq = 0
+
+    async def acquire(self, prio: int) -> None:
+        if self.free > 0 and not self.waiting:
+            self.free -= 1
+            return
+        fut = asyncio.get_running_loop().create_future()
+        self.seq += 1
+        heapq.heappush(self.waiting, (prio, self.seq, fut))
+        try:
+            await fut
+        except asyncio.CancelledError:
+            if fut.done() and not fut.cancelled():  # the core was handed over just before cancelling
+                self.release()
+            raise
+
+    def release(self) -> None:
+        while self.waiting:
+            _p, _s, fut = heapq.heappop(self.waiting)
+            if not fut.done():
+                fut.set_result(None)  # hand the core straight to the next task
+                return
+        self.free += 1
+
+
 class Worker:
     def __init__(self):
         self.pool = ProcessPoolExecutor(CORES)
+        self.gate = PrioGate(CORES)
         self.blobs: collections.OrderedDict[str, bytes] = collections.OrderedDict()
         self.inflight = 0
         self.down_until = 0.0
@@ -140,17 +175,24 @@ class Worker:
                 if body.get("typ") == "vision" and d[:2] == b"\xff\xd8":
                     frame = d
             t_fetch = time.perf_counter() - t0
-            loop = asyncio.get_running_loop()
-            t_exec, boxes = await loop.run_in_executor(self.pool, execute, body.get("typ", "generic"),
-                                                       float(body.get("work", 0.0)), frame)
+            await self.gate.acquire(int(body.get("prio", 1)))
+            t_queue = time.perf_counter() - t0 - t_fetch
+            try:
+                if time.time() < self.down_until:
+                    return web.json_response({"error": "down"}, status=503)
+                loop = asyncio.get_running_loop()
+                t_exec, boxes = await loop.run_in_executor(self.pool, execute, body.get("typ", "generic"),
+                                                           float(body.get("work", 0.0)), frame)
+            finally:
+                self.gate.release()
             if time.time() < self.down_until:
                 return web.json_response({"error": "crashed"}, status=503)
             out = frame if (body.get("typ") == "vision" and frame and body.get("pass_frame")) else \
                 os.urandom(int(float(body.get("out_mb", 0.0)) * 1e6))
             self.store(body["key"], out)
             self.done += 1
-            return web.json_response({"node": NAME, "t_fetch": t_fetch, "t_exec": t_exec, "boxes": boxes,
-                                      "in_bytes": fetched + inline_bytes, "out_bytes": len(out)})
+            return web.json_response({"node": NAME, "t_fetch": t_fetch, "t_queue": t_queue, "t_exec": t_exec,
+                                      "boxes": boxes, "in_bytes": fetched + inline_bytes, "out_bytes": len(out)})
         finally:
             self.inflight -= 1
 
@@ -166,7 +208,8 @@ class Worker:
             load1 = os.getloadavg()[0]
         except (AttributeError, OSError):
             load1 = -1.0
-        return web.json_response({"name": NAME, "cores": CORES, "inflight": self.inflight, "done": self.done,
+        return web.json_response({"name": NAME, "cores": CORES, "inflight": self.inflight,
+                                  "waiting": len(self.gate.waiting), "done": self.done,
                                   "load1": load1, "up_s": time.time() - self.started, "down": down,
                                   "slowdown": SLOWDOWN}, status=503 if down else 200)
 

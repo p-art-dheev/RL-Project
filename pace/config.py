@@ -62,6 +62,7 @@ class Topology:
     })
     lan: tuple = (0.001, 500.0)
     country: dict = field(default_factory=lambda: {"CBE": "IN", "BOM": "IN", "ARN": "SE"})
+    ctrl_loc: str | None = None  # where the orchestrator runs (real testbed: the laptop); None = no control RTT
 
     def link(self, a: str, b: str) -> tuple:
         if a == b:

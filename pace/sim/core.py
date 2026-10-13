@@ -58,6 +58,13 @@ class PrioQueue:
         for d in self.q:
             yield from d
 
+    def remove(self, task) -> bool:
+        for d in self.q:
+            if task in d:
+                d.remove(task)
+                return True
+        return False
+
     def clear(self):
         for d in self.q:
             d.clear()
@@ -190,7 +197,20 @@ class Simulator:
         back = n.backlog if not prio else sum(n.backlog_cls[: cls + 1])
         return (rem + back) / n.spec.cores
 
+    def _ctrl(self, node: SNode) -> float:
+        """Controller round trip per task: dispatching it to the node and learning that it finished.
+        Only for topologies that name a controller location (the real testbed, where the orchestrator
+        runs on the laptop in Coimbatore); one warm HTTP call ~ rtt/2 with the calibrated rtt, the same
+        convention as transfer()."""
+        loc = self.topo.ctrl_loc
+        if loc is None or node.spec.loc == loc:
+            return 0.0
+        return self.topo.link(loc, node.spec.loc)[0] / 2.0
+
     def _input_transfer(self, task: STask, node: SNode, jitter: bool) -> float:
+        return self._ctrl(node) + self._data_transfer(task, node, jitter)
+
+    def _data_transfer(self, task: STask, node: SNode, jitter: bool) -> float:
         job = task.job
         preds = job.spec.preds[task.i]
         if not preds:

@@ -69,6 +69,8 @@ def load_nodes(path: str) -> tuple[Topology, str]:
         topo.net = {tuple(k.split("-")): tuple(v) for k, v in cfg["net"].items()}
     if "country" in cfg:
         topo.country = cfg["country"]
+    # the orchestrator runs next to the edge devices (the laptop) unless the file says otherwise
+    topo.ctrl_loc = cfg.get("controller") or next((n.loc for n in nodes if n.tier == EDGE), None)
     return topo, cfg.get("token", os.environ.get("PACE_TOKEN", "pace-demo"))
 
 
@@ -110,6 +112,8 @@ class LiveOrchestrator(Simulator):
         self.job_specs = generate(topo, wl, self.rng, self.start_hour)
         self.ready: deque = deque()
         self.records: list[dict] = []
+        self.task_records: list[dict] = []  # per task: where, network/queue/compute time (sim-to-real E9)
+        self.placed_at: dict[int, float] = {}
         self.jobs: list[SJob] = []
         self.sla_ewma = 0.0
         self.listeners: list = []
@@ -175,6 +179,10 @@ class LiveOrchestrator(Simulator):
         node.backlog += b
         node.backlog_cls[task.job.spec.cls] += b
         node.count_cls[task.job.spec.cls] += 1
+        # send it now: the worker fetches the inputs while earlier tasks compute and starts it when a core
+        # is free (class priority), so transfers overlap with computation as in the simulator
+        self.placed_at[id(task)] = self.now
+        asyncio.create_task(self._exec(task, node, task.ver))
         self._pump(node)
 
     def _wake(self, task, ver):
@@ -193,6 +201,8 @@ class LiveOrchestrator(Simulator):
 
     # --------------------------------------------------------------- execution
     def _pump(self, node: SNode):
+        """Mirror of the worker's own queue (for the schedulers' wait estimates); the HTTP request is
+        already on its way (see apply)."""
         while node.alive and node.queue and len(node.running) < node.spec.cores:
             task = node.queue.popleft()
             sp = node.spec.speed[task.spec.typ]
@@ -204,14 +214,13 @@ class LiveOrchestrator(Simulator):
             task.start = self.now
             task.est_end = self.now + task.spec.work_est / sp
             node.running.add(task)
-            asyncio.create_task(self._exec(task, node, task.ver))
 
     def _key(self, task):
         return f"{self.run_id}-{task.job.spec.id}-{task.i}"
 
     async def _exec(self, task, node: SNode, ver: int):
         js = task.job.spec
-        body = dict(key=self._key(task), work=task.spec.work, typ=task.spec.typ, inputs=[], inline=[])
+        body = dict(key=self._key(task), work=task.spec.work, typ=task.spec.typ, inputs=[], inline=[], prio=js.cls)
         succ = js.succs[task.i]
         body["out_mb"] = max([mb for (a, b, mb) in js.edges if a == task.i] + [0.0]) if succ else js.result_mb
         frame = self.frames.get(js.id)
@@ -247,9 +256,21 @@ class LiveOrchestrator(Simulator):
             return
         if ver != task.ver:
             return
-        node.running.discard(task)
+        if task in node.running:
+            node.running.discard(task)
+        elif node.queue.remove(task):  # finished before the mirror queue promoted it
+            sp = node.spec.speed[task.spec.typ]
+            c = js.cls
+            node.backlog = max(0.0, node.backlog - task.spec.work_est / sp)
+            node.backlog_cls[c] = max(0.0, node.backlog_cls[c] - task.spec.work_est / sp)
+            node.count_cls[c] = max(0, node.count_cls[c] - 1)
+            task.start = self.now - float(res.get("t_exec", 0.0))
         task.end = self.now
         t_exec = float(res.get("t_exec", task.end - task.start))
+        placed = self.placed_at.pop(id(task), task.start)
+        self.task_records.append(dict(job=js.id, cls=js.cls, i=task.i, node=node.spec.name, placed=round(placed, 3),
+                                      total=round(self.now - placed, 3), fetch=round(float(res.get("t_fetch", 0)), 3),
+                                      queue=round(float(res.get("t_queue", 0)), 3), exec=round(t_exec, 3)))
         self._account(task, node, t_exec)
         task.state = DONE
         job = task.job
@@ -465,7 +486,8 @@ async def amain(a):
         await web.TCPSite(runner, "0.0.0.0", a.port).start()
         print(f"dashboard: http://localhost:{a.port}", flush=True)
     summary = await orch.run(a.minutes, a.drain)
-    out = dict(args=vars(a), summary=summary, records=orch.records, events=orch.events, series=orch.series,
+    out = dict(args=vars(a), summary=summary, records=orch.records, tasks=orch.task_records, events=orch.events,
+               series=orch.series,
                decide_ms=1000 * orch.decide_wall / max(1, orch.n_decisions),
                w_trace=getattr(sched, "w_trace", None), plan_s=getattr(sched, "plan_time", None))
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)

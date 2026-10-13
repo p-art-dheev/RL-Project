@@ -21,7 +21,7 @@ from collections import deque
 from pathlib import Path
 
 import numpy as np
-from aiohttp import ClientSession, ClientTimeout, web
+from aiohttp import ClientSession, ClientTimeout, TCPConnector, web
 
 from pace.carbon import CarbonTrace
 from pace.config import EDGE, NodeSpec, Topology, Workload
@@ -384,7 +384,9 @@ class LiveOrchestrator(Simulator):
 
     # --------------------------------------------------------------- main
     async def run(self, minutes: float, drain_s: float = 120.0):
-        self.http = ClientSession(timeout=ClientTimeout(total=180), headers={"X-Token": self.token})
+        # keep connections to the workers open between tasks: a new TCP handshake costs one more round trip
+        self.http = ClientSession(timeout=ClientTimeout(total=180), headers={"X-Token": self.token},
+                                  connector=TCPConnector(keepalive_timeout=120))
         loop = asyncio.get_running_loop()
         self.t0 = time.monotonic()
         self.carbon.clock = lambda: self.now

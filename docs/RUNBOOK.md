@@ -70,7 +70,13 @@ python -m testbed.local --edges 2   # allow the Windows firewall prompt for priv
 Back in the first terminal, measure the real system (CPU speed per node, RTT and bandwidth Coimbatore↔Mumbai↔Stockholm):
 ```powershell
 python -m testbed.calibrate         # writes the measurements into testbed/nodes.json
+python -m experiments.twin_check    # ~1 min: predicts the E8 table in the calibrated digital twin
 ```
+If the network or the machines differ a lot from the last calibration (`testbed/twin.json`), fine-tune the policy in the new twin before E8 (≈25 min, no AWS needed, the instances can be stopped meanwhile):
+```powershell
+python -m pace.rl.train --init models/pace.pt --nodes testbed/nodes.json --out models/pace_live.pt --minutes 25 --workers 6
+```
+The orchestrator uses `models/pace_live.pt` automatically when it exists.
 - **Changed Wi-Fi (e.g. home → college)?** Run `python -m testbed.aws allow` to re-authorise your new public IP.
 - **Some AWS nodes say `timed out`, others `OK`?** Your network sends connections out through several public IPs (common on campus networks with two ISP links), and AWS drops the ones it doesn't know. Run `python -m testbed.aws allow`, which detects and authorises all of them. If nodes still time out, run `python -m testbed.aws allow --wide` to authorise each IP's /24 range. The workers still require the token.
 - **`connection refused` on an AWS node** means its worker is still installing; wait 1–2 min. **On edge0/edge1** it means `testbed.local` isn't running.

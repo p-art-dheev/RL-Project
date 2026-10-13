@@ -72,6 +72,10 @@ def load_nodes(path: str) -> tuple[Topology, str]:
     return topo, cfg.get("token", os.environ.get("PACE_TOKEN", "pace-demo"))
 
 
+# the policy fine-tuned in the calibrated twin of the real testbed, when present (pace.rl.train --nodes)
+DEFAULT_MODEL = "models/pace_live.pt" if Path("models/pace_live.pt").exists() else "models/pace.pt"
+
+
 def make_scheduler(a):
     from pace.sched import heuristics as H
     from pace.sched.mersem import MERSEM
@@ -478,7 +482,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--nodes", default="testbed/nodes.json")
     ap.add_argument("--scheduler", default="pace")
-    ap.add_argument("--model", default="models/pace.pt")
+    ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--w", type=float, default=0.9, help="PACE SLA weight (0 = carbon only, 1 = SLA only)")
     ap.add_argument("--mersem-w", type=float, default=0.5, help="MERSEM w_s (0.5 = MERSEM-Balanced)")
     ap.add_argument("--target", type=float, default=None)

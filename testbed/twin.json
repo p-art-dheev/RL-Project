@@ -10,8 +10,8 @@
    "arch": "x86",
    "url": "http://twin",
    "speed": {
-    "generic": 0.55,
-    "vision": 4.0
+    "generic": 0.559,
+    "vision": 5.596
    },
    "idle_w": 2.0,
    "max_w": 6.0,
@@ -27,8 +27,8 @@
    "arch": "x86",
    "url": "http://twin",
    "speed": {
-    "generic": 0.568,
-    "vision": 4.0
+    "generic": 0.58,
+    "vision": 5.599
    },
    "idle_w": 2.0,
    "max_w": 6.0,
@@ -44,8 +44,8 @@
    "arch": "x86",
    "url": "http://twin",
    "speed": {
-    "generic": 1.544,
-    "vision": 10.201
+    "generic": 1.522,
+    "vision": 22.462
    },
    "idle_w": 1.48,
    "max_w": 7.0,
@@ -62,7 +62,7 @@
    "url": "http://twin",
    "speed": {
     "generic": 0.502,
-    "vision": 8.097
+    "vision": 18.877
    },
    "idle_w": 0.94,
    "max_w": 3.38,
@@ -78,8 +78,8 @@
    "arch": "x86",
    "url": "http://twin",
    "speed": {
-    "generic": 2.114,
-    "vision": 11.853
+    "generic": 2.129,
+    "vision": 26.297
    },
    "idle_w": 1.48,
    "max_w": 7.0,
@@ -95,8 +95,8 @@
    "arch": "arm",
    "url": "http://twin",
    "speed": {
-    "generic": 0.501,
-    "vision": 8.17
+    "generic": 0.49,
+    "vision": 18.954
    },
    "idle_w": 0.94,
    "max_w": 3.38,
@@ -106,16 +106,16 @@
  ],
  "net": {
   "CBE-BOM": [
-   0.141,
-   6.3
+   0.109,
+   4.7
   ],
   "CBE-ARN": [
-   0.434,
-   3.5
+   0.424,
+   3.0
   ],
   "BOM-ARN": [
-   0.284,
-   12.5
+   0.282,
+   16.2
   ]
  },
  "country": {
@@ -125,6 +125,6 @@
  },
  "calibration": {
   "at": "2026-10-13",
-  "note": "real AWS testbed from a campus network in Coimbatore; edge vision assumes single-thread HOG"
+  "note": "real AWS testbed (Mumbai + Stockholm) measured by testbed.calibrate from a campus network in Coimbatore; tokens and IPs removed"
  }
 }

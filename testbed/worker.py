@@ -70,14 +70,14 @@ _HOG = None
 def _vision(frame: bytes | None, work: float) -> tuple[float, int]:
     """HOG pedestrian detection on a JPEG frame (real camera workload)."""
     global _HOG
-    t0 = time.perf_counter()
     try:
         import cv2
         import numpy as np
-        if _HOG is None:
+        if _HOG is None:  # one-off start-up of this worker process, not part of the task's time
             cv2.setNumThreads(1)  # one task per core: OpenCV would otherwise use every core of the host
             _HOG = cv2.HOGDescriptor()
             _HOG.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+        t0 = time.perf_counter()
         if frame:
             img = cv2.imdecode(np.frombuffer(frame, np.uint8), cv2.IMREAD_GRAYSCALE)
         else:

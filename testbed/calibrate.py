@@ -36,6 +36,7 @@ def main():
     tok = cfg["token"]
     cal = {}
     for n in cfg["nodes"]:
+        _req(n["url"] + "/calibrate?reps=2", tok, timeout=180)  # warm-up: worker processes load numpy / OpenCV
         _t, body = _req(n["url"] + "/calibrate?reps=3", tok, timeout=180)
         cal[n["name"]] = json.loads(body)
         print(n["name"], cal[n["name"]])

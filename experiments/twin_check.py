@@ -29,16 +29,19 @@ def main():
     ap.add_argument("--minutes", type=float, default=6)
     ap.add_argument("--seeds", type=int, default=5)
     ap.add_argument("--w", type=float, default=0.9)
+    ap.add_argument("--rate-a", type=float, default=0.25, help="as testbed.orchestrator --rate-a")
+    ap.add_argument("--rate-bc", type=float, default=0.075, help="as testbed.orchestrator --rate-bc")
     a = ap.parse_args()
     torch.set_num_threads(1)
-    print(f"twin: {a.nodes}   PACE model: {a.model}   {a.minutes:g} min x {a.seeds} seeds\n")
+    print(f"twin: {a.nodes}   PACE model: {a.model}   {a.minutes:g} min x {a.seeds} seeds   "
+          f"rate_a={a.rate_a} rate_bc={a.rate_bc}\n")
     print(f"| Scheduler | SLA A % | SLA B % | SLA A+B % | carbon dyn (g) | p95 alert (s) |\n|---|---|---|---|---|---|")
     for m in a.methods.split(","):
         rs = []
         for seed in range(1, a.seeds + 1):
             opts = argparse.Namespace(scheduler=m, model=a.model, w=a.w, target=None, mersem_w=0.5, epoch=120.0)
             topo, _tok = load_nodes(a.nodes)
-            wl = Workload(split="test", horizon=a.minutes * 60, start_hour=10.0, rate_a=0.25, rate_bc=0.075,
+            wl = Workload(split="test", horizon=a.minutes * 60, start_hour=10.0, rate_a=a.rate_a, rate_bc=a.rate_bc,
                           work_scale=0.2, data_scale=0.2, est_noise=0.2)
             jobs = generate(topo, wl, np.random.default_rng(seed), 10.0)  # same RNG path as the orchestrator
             sim = Simulator(topo, wl, seed=seed, jobs=[j for j in jobs if j.arrival < a.minutes * 60])

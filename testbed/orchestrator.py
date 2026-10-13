@@ -63,7 +63,8 @@ def load_nodes(path: str) -> tuple[Topology, str]:
     for n in cfg["nodes"]:
         nodes.append(NodeSpec(n["name"], int(n["tier"]), n["loc"], n["zone"], int(n["cores"]), dict(n["speed"]),
                               float(n["idle_w"]), float(n["max_w"]), float(n.get("pue", 1.0)), n.get("arch", "x86"),
-                              n["name"] if int(n["tier"]) == EDGE else None, float(n.get("mem_gb", 4.0)), n["url"]))
+                              n["name"] if int(n["tier"]) == EDGE else None, float(n.get("mem_gb", 4.0)), n["url"],
+                              float(n.get("contention", 0.15))))
     topo = Topology(nodes)
     if "net" in cfg:
         topo.net = {tuple(k.split("-")): tuple(v) for k, v in cfg["net"].items()}

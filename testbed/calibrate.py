@@ -1,7 +1,7 @@
 """Measure the real testbed and write the numbers into testbed/nodes.json.
 
-  * per-node speed for each task type (generic BLAS kernel, HOG vision), relative to
-    the reference node (the Mumbai x86 instance)
+  * per-node speed for each task type (generic BLAS kernel, HOG vision), in work units per second
+  * per-node slowdown when every core is busy (SMT threads share a physical core)
   * laptop -> region RTT and bandwidth, Mumbai <-> Stockholm RTT and bandwidth
 The same file then parameterises the simulator's "testbed mirror" (sim-to-real check).
 
@@ -15,6 +15,7 @@ import os
 import statistics
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -40,6 +41,16 @@ def main():
         _t, body = _req(n["url"] + "/calibrate?reps=3", tok, timeout=180)
         cal[n["name"]] = json.loads(body)
         print(n["name"], cal[n["name"]])
+    # slowdown with every core busy (2 vCPUs of an x86 instance are one physical core with 2 SMT threads)
+    for n in cfg["nodes"]:
+        if n["cores"] < 2:
+            continue
+        with ThreadPoolExecutor(n["cores"]) as ex:
+            loaded = list(ex.map(lambda _i: json.loads(_req(n["url"] + "/calibrate?reps=2", tok, timeout=180)[1]),
+                                 range(n["cores"])))
+        busy = statistics.mean(c["generic_s_per_unit"] for c in loaded)
+        n["contention"] = round(max(0.0, busy / cal[n["name"]]["generic_s_per_unit"] - 1.0), 2)
+        print(f"{n['name']}: {n['cores']} tasks at once -> each {1 + n['contention']:.2f}x slower")
     ref = next((n for n in cfg["nodes"] if n["tier"] == 1 and n.get("arch") == "x86"), cfg["nodes"][-1])
     for n in cfg["nodes"]:
         c = cal[n["name"]]

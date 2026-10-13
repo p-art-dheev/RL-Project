@@ -38,6 +38,7 @@ class NodeSpec:
     owner: str | None = None  # edge device that owns this node (edge tier)
     mem_gb: float = 4.0
     url: str | None = None  # testbed endpoint
+    contention: float = 0.15  # extra compute time per task when all cores are busy (2 SMT threads ~0.8) (calib)
 
 
 def cloud_node(name, tier, loc, zone, arch="x86", vcpu=2, speed=None, mem=4.0) -> NodeSpec:
@@ -124,6 +125,7 @@ def randomized(base_topo: Topology, wl: Workload, rng, twin: bool = False) -> tu
         for n in topo.nodes:
             n.speed = {k: v * float(rng.uniform(0.5, 2.0) if (n.tier == EDGE and k == "vision") else rng.uniform(0.7, 1.4))
                        for k, v in n.speed.items()}
+            n.contention = max(0.0, n.contention + float(rng.uniform(-0.15, 0.15)))
     else:
         topo = city_topology(int(rng.integers(2, 7)), int(rng.integers(1, 4)), int(rng.integers(1, 4)))
         for n in topo.nodes:

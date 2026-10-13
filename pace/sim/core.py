@@ -309,7 +309,7 @@ class Simulator:
     def _start(self, task: STask, node: SNode) -> None:
         s = node.spec
         busy = len(node.running) + 1
-        cont = 1.0 + 0.15 * (busy - 1) / max(1, s.cores - 1)
+        cont = 1.0 + s.contention * (busy - 1) / max(1, s.cores - 1)
         sp = s.speed[task.spec.typ]
         dur = task.spec.work / sp * node.slow * cont
         task.start, task.end = self.now, self.now + dur

@@ -123,6 +123,8 @@ def generate(topo: Topology, wl: Workload, rng: np.random.Generator, start_hour:
 
     def poisson_times(rate):
         # thinning for a non-homogeneous Poisson process
+        if rate <= 0:  # e.g. alerts come from real cameras instead (orchestrator --camera)
+            return []
         fmax = 1.35 * max([1.0] + [m for (_s, _d, m) in wl.bursts])
         t, out = 0.0, []
         while True:

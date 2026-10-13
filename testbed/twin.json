@@ -1,0 +1,130 @@
+{
+ "token": "none",
+ "nodes": [
+  {
+   "name": "edge0",
+   "tier": 0,
+   "loc": "CBE",
+   "zone": "IN-SO",
+   "cores": 1,
+   "arch": "x86",
+   "url": "http://twin",
+   "speed": {
+    "generic": 0.55,
+    "vision": 4.0
+   },
+   "idle_w": 2.0,
+   "max_w": 6.0,
+   "pue": 1.0,
+   "mem_gb": 2.0
+  },
+  {
+   "name": "edge1",
+   "tier": 0,
+   "loc": "CBE",
+   "zone": "IN-SO",
+   "cores": 1,
+   "arch": "x86",
+   "url": "http://twin",
+   "speed": {
+    "generic": 0.568,
+    "vision": 4.0
+   },
+   "idle_w": 2.0,
+   "max_w": 6.0,
+   "pue": 1.0,
+   "mem_gb": 2.0
+  },
+  {
+   "name": "bom-x86",
+   "tier": 1,
+   "loc": "BOM",
+   "zone": "IN-WE",
+   "cores": 2,
+   "arch": "x86",
+   "url": "http://twin",
+   "speed": {
+    "generic": 1.544,
+    "vision": 10.201
+   },
+   "idle_w": 1.48,
+   "max_w": 7.0,
+   "pue": 1.135,
+   "mem_gb": 4.0
+  },
+  {
+   "name": "bom-arm",
+   "tier": 1,
+   "loc": "BOM",
+   "zone": "IN-WE",
+   "cores": 2,
+   "arch": "arm",
+   "url": "http://twin",
+   "speed": {
+    "generic": 0.502,
+    "vision": 8.097
+   },
+   "idle_w": 0.94,
+   "max_w": 3.38,
+   "pue": 1.135,
+   "mem_gb": 2.0
+  },
+  {
+   "name": "arn-x86",
+   "tier": 2,
+   "loc": "ARN",
+   "zone": "SE-SE3",
+   "cores": 2,
+   "arch": "x86",
+   "url": "http://twin",
+   "speed": {
+    "generic": 2.114,
+    "vision": 11.853
+   },
+   "idle_w": 1.48,
+   "max_w": 7.0,
+   "pue": 1.135,
+   "mem_gb": 4.0
+  },
+  {
+   "name": "arn-arm",
+   "tier": 2,
+   "loc": "ARN",
+   "zone": "SE-SE3",
+   "cores": 2,
+   "arch": "arm",
+   "url": "http://twin",
+   "speed": {
+    "generic": 0.501,
+    "vision": 8.17
+   },
+   "idle_w": 0.94,
+   "max_w": 3.38,
+   "pue": 1.135,
+   "mem_gb": 2.0
+  }
+ ],
+ "net": {
+  "CBE-BOM": [
+   0.141,
+   6.3
+  ],
+  "CBE-ARN": [
+   0.434,
+   3.5
+  ],
+  "BOM-ARN": [
+   0.284,
+   12.5
+  ]
+ },
+ "country": {
+  "CBE": "IN",
+  "BOM": "IN",
+  "ARN": "SE"
+ },
+ "calibration": {
+  "at": "2026-10-13",
+  "note": "real AWS testbed from a campus network in Coimbatore; edge vision assumes single-thread HOG"
+ }
+}

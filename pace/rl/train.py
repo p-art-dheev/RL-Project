@@ -4,6 +4,9 @@
 
 Rollouts run in parallel worker processes over domain-randomised topologies and
 workloads (pace.config.randomized); w ~ U[0, 1] is sampled per episode.
+
+Fine-tuning for the real testbed (calibrate -> fine-tune in the digital twin -> deploy):
+  python -m pace.rl.train --init models/pace.pt --nodes testbed/nodes.json --out models/pace_live.pt --minutes 25
 Reward per decision (attributed to the task it placed):
   r = -[(1 - w) * task_carbon / (task_work * fog_carbon_per_work) + w * (0.5 * task_penalty + 0.5 * job_penalty)]
   penalty = late * (1 + min(1, lateness / window)); task_penalty uses the task's sub-deadline
@@ -33,11 +36,17 @@ GAMMA, LAM = 0.8, 0.9  # short horizon: a decision is judged mainly by its own j
 
 
 B_HEAVY = 0.0  # probability of a class-B-heavy, congested episode (set by --b-heavy)
+TWIN = None  # calibrated testbed topology (set by --nodes)
+
+
+def load_twin(path: str):
+    from testbed.orchestrator import load_nodes
+    return load_nodes(path)[0]
 
 
 def make_sim(seed: int, horizon: float = 1200.0):
     rng = np.random.default_rng(seed)
-    topo, wl = randomized(testbed_topology(), Workload(split="train"), rng)
+    topo, wl = randomized(TWIN or testbed_topology(), Workload(split="train"), rng, twin=TWIN is not None)
     wl.horizon = horizon
     if rng.random() < B_HEAVY:  # analytics jobs are a small share of decisions; oversample them
         wl.frac_b = 0.85
@@ -86,9 +95,10 @@ def _gae(r, v):
 
 def rollout_worker(args):
     """Run episodes with the given policy until >= n_steps decisions; return training arrays."""
-    state, n_steps, seed, mode, b_heavy = args
-    global B_HEAVY
+    state, n_steps, seed, mode, b_heavy, twin = args
+    global B_HEAVY, TWIN
     B_HEAVY = b_heavy
+    TWIN = load_twin(twin) if twin else None
     torch.set_num_threads(1)
     net = PACENet()
     if state is not None:
@@ -151,13 +161,18 @@ def _merge(results):
     return data, stats
 
 
-def evaluate(net, seeds=(11, 12), w=0.75):
+def evaluate(net, seeds=(11, 12), w=0.75, twin=None):
     from .agent import PACE
     out = []
     for sd in seeds:
-        wl = Workload(split="train", horizon=1800, start_hour=10, rate_a=0.25, rate_bc=0.02)
-        r1 = Simulator(testbed_topology(), wl, seed=sd).run(PACE(net, w=w))
-        r2 = Simulator(testbed_topology(), wl, seed=sd).run(CAEFT())
+        if twin is None:
+            topo, wl = testbed_topology, Workload(split="train", horizon=1800, start_hour=10, rate_a=0.25, rate_bc=0.02)
+        else:  # the real-testbed experiment settings (experiments.run_testbed)
+            topo = lambda: load_twin(twin)  # noqa: E731
+            wl = Workload(split="train", horizon=1800, start_hour=10, rate_a=0.25, rate_bc=0.075, work_scale=0.2,
+                          data_scale=0.2, est_noise=0.2)
+        r1 = Simulator(topo(), wl, seed=sd).run(PACE(net, w=w))
+        r2 = Simulator(topo(), wl, seed=sd).run(CAEFT())
         out.append((r1["sla_A"], r1["sla_B"], r1["carbon_dyn"], r2["sla_A"], r2["sla_B"], r2["carbon_dyn"]))
     return np.mean(out, axis=0)
 
@@ -174,6 +189,7 @@ def main():
     ap.add_argument("--init", default=None)
     ap.add_argument("--b-heavy", type=float, default=0.0, help="share of class-B-heavy training episodes")
     ap.add_argument("--class-balance", action="store_true", help="equal PPO loss weight per job class")
+    ap.add_argument("--nodes", default=None, help="train in the calibrated digital twin (testbed/nodes.json)")
     a = ap.parse_args()
     torch.manual_seed(0)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
@@ -189,7 +205,7 @@ def main():
         # ---------------- behaviour cloning warm start (DeepRM2 idea) ----------------
         if not a.init:
             for it in range(a.bc_iters):
-                res = pool.map(rollout_worker, [(None, a.steps, seed + i, "bc", 0.0) for i in range(a.workers)])
+                res = pool.map(rollout_worker, [(None, a.steps, seed + i, "bc", 0.0, a.nodes) for i in range(a.workers)])
                 seed += a.workers
                 data, _ = _merge(res)
                 n = len(data["a"])
@@ -208,13 +224,13 @@ def main():
                     acc = (net(xn[:20000], xt[:20000], m[:20000])[0].argmax(-1) == y[:20000]).float().mean()
                 print(f"[BC {it}] n={n} loss={loss.item():.3f} acc={acc:.3f} t={time.time() - t_start:.0f}s", flush=True)
             torch.save(net.state_dict(), a.out.replace(".pt", "_bc.pt"))
-            ev = evaluate(net)
+            ev = evaluate(net, twin=a.nodes)
             print(f"[BC eval w=.75] PACE A={ev[0]:.3f} B={ev[1]:.3f} CO2={ev[2]:.2f} | CA-EFT A={ev[3]:.3f} B={ev[4]:.3f} CO2={ev[5]:.2f}", flush=True)
         # ---------------- PPO ----------------
         it = 0
         while time.time() - t_start < a.minutes * 60:
             state = {k: v.clone() for k, v in net.state_dict().items()}
-            res = pool.map(rollout_worker, [(state, a.steps, seed + i, "ppo", a.b_heavy) for i in range(a.workers)])
+            res = pool.map(rollout_worker, [(state, a.steps, seed + i, "ppo", a.b_heavy, a.nodes) for i in range(a.workers)])
             seed += a.workers
             data, stats = _merge(res)
             n = len(data["a"])
@@ -254,7 +270,7 @@ def main():
                        co2n=float(np.mean([s["co2n"] for s in stats])), defer=float(np.mean([s["defer"] for s in stats])),
                        pg=pg.item(), vl=vl.item(), ent=ent.item())
             if it % 3 == 0:
-                ev = evaluate(net)
+                ev = evaluate(net, twin=a.nodes)
                 rec.update(evA=ev[0], evB=ev[1], evCO2=ev[2], refA=ev[3], refB=ev[4], refCO2=ev[5])
                 torch.save(net.state_dict(), a.out.replace(".pt", f"_it{it}.pt"))
             log.append(rec)

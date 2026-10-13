@@ -75,6 +75,7 @@ def _vision(frame: bytes | None, work: float) -> tuple[float, int]:
         import cv2
         import numpy as np
         if _HOG is None:
+            cv2.setNumThreads(1)  # one task per core: OpenCV would otherwise use every core of the host
             _HOG = cv2.HOGDescriptor()
             _HOG.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
         if frame:

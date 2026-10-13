@@ -113,12 +113,21 @@ class Workload:
     priority: bool = True  # class-priority node queues (A > B > C); False = FIFO (ablation)
 
 
-def randomized(base_topo: Topology, wl: Workload, rng) -> tuple[Topology, Workload]:
-    """Domain randomisation used during training."""
-    topo = city_topology(int(rng.integers(2, 7)), int(rng.integers(1, 4)), int(rng.integers(1, 4)))
-    for n in topo.nodes:
-        if n.tier != EDGE:
-            n.speed = {k: v * float(rng.uniform(0.8, 1.2)) for k, v in n.speed.items()}
+def randomized(base_topo: Topology, wl: Workload, rng, twin: bool = False) -> tuple[Topology, Workload]:
+    """Domain randomisation used during training.
+
+    twin=True keeps base_topo's nodes (the calibrated digital twin of the real testbed, from
+    testbed/nodes.json) and jitters the measured speeds around their calibrated values."""
+    if twin:
+        topo = copy.deepcopy(base_topo)
+        for n in topo.nodes:
+            n.speed = {k: v * float(rng.uniform(0.5, 2.0) if (n.tier == EDGE and k == "vision") else rng.uniform(0.7, 1.4))
+                       for k, v in n.speed.items()}
+    else:
+        topo = city_topology(int(rng.integers(2, 7)), int(rng.integers(1, 4)), int(rng.integers(1, 4)))
+        for n in topo.nodes:
+            if n.tier != EDGE:
+                n.speed = {k: v * float(rng.uniform(0.8, 1.2)) for k, v in n.speed.items()}
     topo.net = {k: (rtt * float(rng.uniform(0.7, 1.5)), bw * float(rng.uniform(0.5, 1.5)))
                 for k, (rtt, bw) in base_topo.net.items()}
     w = copy.deepcopy(wl)
@@ -129,7 +138,7 @@ def randomized(base_topo: Topology, wl: Workload, rng) -> tuple[Topology, Worklo
     w.fail_rate = float(rng.choice([0.0, 0.0, 0.5, 1.0]))
     w.straggle_rate = float(rng.choice([0.0, 0.5, 1.0]))
     w.horizon = 1800.0
-    w.work_scale = float(rng.choice([1.0, 1.0, 0.5, 0.2]))  # testbed runs use 0.2
+    w.work_scale = float(rng.choice([0.2, 0.2, 0.5, 1.0] if twin else [1.0, 1.0, 0.5, 0.2]))  # testbed runs use 0.2
     w.data_scale = w.work_scale
     w.rate_bc /= w.work_scale  # keep utilisation comparable
     if rng.random() < 0.3:

@@ -4,6 +4,8 @@ It *reuses* the simulator's decision-context builder, job bookkeeping and metric
 (by duck-typing pace.sim.core.Simulator), so schedulers see exactly the same Ctx
 in simulation and on AWS. Only the execution mechanics differ: tasks are sent to
 real workers over HTTP, inputs move between real nodes, runtimes are measured.
+The network estimates start from the calibration and are corrected online from the network time of
+recently completed tasks (90th percentile per region), so all schedulers see latency drift.
 
   python -m testbed.orchestrator --nodes testbed/nodes.json --scheduler pace-shield --minutes 10
   open http://localhost:8080  (live dashboard; fault injection, SLA target, carbon spike)
@@ -114,6 +116,10 @@ class LiveOrchestrator(Simulator):
         self.ready: deque = deque()
         self.records: list[dict] = []
         self.task_records: list[dict] = []  # per task: where, network/queue/compute time (sim-to-real E9)
+        # online network estimate: measured minus modelled network time of recent tasks, per location
+        self.net_resid: dict[str, deque] = {}
+        self.net_corr: dict[str, float] = {}
+        self.net_trace: list[dict] = []
         self.placed_at: dict[int, float] = {}
         self.jobs: list[SJob] = []
         self.sla_ewma = 0.0
@@ -182,7 +188,7 @@ class LiveOrchestrator(Simulator):
         node.count_cls[task.job.spec.cls] += 1
         # send it now: the worker fetches the inputs while earlier tasks compute and starts it when a core
         # is free (class priority), so transfers overlap with computation as in the simulator
-        self.placed_at[id(task)] = self.now
+        self.placed_at[id(task)] = (self.now, Simulator._ctrl(self, node) + self._data_transfer(task, node, False))
         asyncio.create_task(self._exec(task, node, task.ver))
         self._pump(node)
 
@@ -215,6 +221,24 @@ class LiveOrchestrator(Simulator):
             task.start = self.now
             task.est_end = self.now + task.spec.work_est / sp
             node.running.add(task)
+
+    def _ctrl(self, node: SNode) -> float:
+        """Controller round trip as calibrated, plus what the network has recently been adding on top of
+        the calibrated model (90th percentile of the last 30 residuals). Every scheduler's transfer
+        estimate, PACE's features and the shield use it, so they all see the network as it is now."""
+        return Simulator._ctrl(self, node) + self.net_corr.get(node.spec.loc, 0.0)
+
+    def _observe_net(self, node: SNode, resid: float):
+        loc = node.spec.loc
+        if loc == self.topo.ctrl_loc:
+            return
+        d = self.net_resid.setdefault(loc, deque(maxlen=30))
+        d.append(resid)
+        if len(d) >= 5:
+            corr = max(0.0, float(np.quantile(list(d), 0.9)))
+            if abs(corr - self.net_corr.get(loc, 0.0)) > 0.05:
+                self.net_trace.append(dict(t=round(self.now, 1), loc=loc, extra_s=round(corr, 3)))
+            self.net_corr[loc] = corr
 
     def _key(self, task):
         return f"{self.run_id}-{task.job.spec.id}-{task.i}"
@@ -268,7 +292,9 @@ class LiveOrchestrator(Simulator):
             task.start = self.now - float(res.get("t_exec", 0.0))
         task.end = self.now
         t_exec = float(res.get("t_exec", task.end - task.start))
-        placed = self.placed_at.pop(id(task), task.start)
+        placed, pred_net = self.placed_at.pop(id(task), (task.start, None))
+        if pred_net is not None:
+            self._observe_net(node, (self.now - placed) - float(res.get("t_queue", 0)) - t_exec - pred_net)
         self.task_records.append(dict(job=js.id, cls=js.cls, i=task.i, node=node.spec.name, placed=round(placed, 3),
                                       total=round(self.now - placed, 3), fetch=round(float(res.get("t_fetch", 0)), 3),
                                       queue=round(float(res.get("t_queue", 0)), 3), exec=round(t_exec, 3)))
@@ -419,7 +445,8 @@ class LiveOrchestrator(Simulator):
                                                                                self.time_scale / 3600) % 24, 2),
                     summary={k: v for k, v in s.items() if isinstance(v, (int, float))}, nodes=nodes,
                     decisions=list(self.decisions)[:15], events=self.events[-10:], series=self.series[-120:],
-                    frame=self.last_frame, decide_ms=1000 * self.decide_wall / max(1, self.n_decisions))
+                    frame=self.last_frame, decide_ms=1000 * self.decide_wall / max(1, self.n_decisions),
+                    net_extra={k: round(v, 3) for k, v in self.net_corr.items()})
 
 
 def web_app(orch: LiveOrchestrator) -> web.Application:
@@ -489,7 +516,8 @@ async def amain(a):
         await web.TCPSite(runner, "0.0.0.0", a.port).start()
         print(f"dashboard: http://localhost:{a.port}", flush=True)
     summary = await orch.run(a.minutes, a.drain)
-    out = dict(args=vars(a), summary=summary, records=orch.records, tasks=orch.task_records, events=orch.events,
+    out = dict(args=vars(a), summary=summary, records=orch.records, tasks=orch.task_records, net_trace=orch.net_trace,
+               events=orch.events,
                series=orch.series,
                decide_ms=1000 * orch.decide_wall / max(1, orch.n_decisions),
                w_trace=getattr(sched, "w_trace", None), plan_s=getattr(sched, "plan_time", None))

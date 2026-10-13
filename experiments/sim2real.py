@@ -75,7 +75,7 @@ def main():
     fig.savefig("results/plots/e9_latency_cdf.png", dpi=130)
     text = "# E9 — sim-to-real fidelity (same job trace, calibrated simulator vs real AWS)\n\n" + "\n".join(lines) + \
         "\n\nKS = Kolmogorov-Smirnov distance between real and simulated latency distributions (0 = identical).\n"
-    Path("results/testbed/E9_SIM2REAL.md").write_text(text)
+    Path("results/testbed/E9_SIM2REAL.md").write_text(text, encoding="utf-8")
     print(text)
 
 

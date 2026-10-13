@@ -70,7 +70,7 @@ def summarize(out: Path, methods, rate_bc: float = 0.075):
                      f"{np.mean([r['carbon_dyn'] for r in rs]):.4f} | {f('p95_A')} | {sh} | {f('decide_ms')} |")
     text = (f"# E8 — real AWS testbed (Coimbatore edge, Mumbai fog, Stockholm cloud), rate_bc={rate_bc}\n\n"
             + "\n".join(lines) + "\n")
-    (out / "E8_SUMMARY.md").write_text(text)
+    (out / "E8_SUMMARY.md").write_text(text, encoding="utf-8")
     print(text)
 
 

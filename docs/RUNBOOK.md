@@ -93,7 +93,11 @@ Open http://localhost:8080. You should see jobs completing, all nodes green, and
 
 ```powershell
 python -m experiments.run_testbed --methods pace-shield,pace,mersem,ca-eft,eft --minutes 6 --seeds 3
+# busy hour, 2x analytics load (~1.5 h), results kept separately:
+python -m experiments.run_testbed --rate-bc 0.15 --methods pace-shield,pace,mersem,ca-eft --seeds 3 --out-dir results/testbed/busy
+python -m experiments.sim2real      # E9: real runs vs the calibrated twin
 ```
+Interrupted? Run the same command again: finished runs are skipped.
 - Runs are interleaved (A B C D E, A B C D E, …) on the same job and carbon trace per seed.
 - Results go to `results/testbed/e8_*.json`, with a table in `results/testbed/E8_SUMMARY.md`.
 - Keep the laptop plugged in and stop it from sleeping: Settings → Power → Screen and sleep → Never.

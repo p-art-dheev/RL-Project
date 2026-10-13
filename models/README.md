@@ -3,6 +3,7 @@
 | File | What it is | Loads with current code? |
 |---|---|---|
 | `pace.pt` | **Final PACE policy (v5)**: 20 task features (incl. job pressure), trained with deadline-decomposition reward, class-balanced PPO and class-priority queues. Used by all results in `results/RESULTS.md` and by the testbed. | yes |
+| `pace_live.pt` | **PACE fine-tuned for the real AWS testbed**: `pace.pt` further trained in the calibrated digital twin (`python -m pace.rl.train --init models/pace.pt --nodes testbed/twin.json`, two stages, ~25 min; checkpoint of iteration 39 of stage 2, chosen on the training-split validation runs). Used automatically by the live orchestrator, E8 and the demo. Predictions: `results/testbed/TWIN_PREDICTION.md`; logs: `results/training_logs/train_live_stage*.log`, `pace_live_log.json`. | yes |
 | `pace_bc.pt` | Behaviour-cloning warm start for v5 (imitates CA-EFT). `python -m pace.rl.train --init models/pace_bc.pt` | yes |
 | `pace_log.json` | Training log of the final model (plotted in `results/plots/training.png`). | n/a |
 | `pace_v3.pt` | Reward v3 (deadline decomposition), 18 task features; results in `results/RESULTS_v3.md`. | no: needs the 18-feature code (commit "Reward v3 ...") |

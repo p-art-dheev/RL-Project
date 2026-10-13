@@ -41,7 +41,7 @@ def replay(run: dict, nodes: str):
 
 
 def main():
-    runs = sorted(Path("results/testbed").glob("e8_*.json"))
+    runs = sorted(Path("results/testbed").rglob("e8_*.json"))
     if not runs:
         print("no testbed runs found in results/testbed/ (run experiments.run_testbed first)")
         return
@@ -63,7 +63,7 @@ def main():
                         x = np.sort(data)
                         ax[c].plot(x, np.arange(1, len(x) + 1) / len(x), style, label=f"{p.stem} {'real' if style == '-' else 'sim'}")
         rs = run["summary"]
-        lines.append(f"| {p.stem} | {rs['jobs']}/{s_sum['jobs']} | {100 * rs['sla_AB']:.1f}% | {100 * s_sum['sla_AB']:.1f}% | "
+        lines.append(f"| {p.parent.name}/{p.stem} | {rs['jobs']}/{s_sum['jobs']} | {100 * rs['sla_AB']:.1f}% | {100 * s_sum['sla_AB']:.1f}% | "
                      f"{rs['p95_A']:.2f}s | {s_sum['p95_A']:.2f}s | {ks[0]:.2f} | {ks[1]:.2f} |")
     for c, t in enumerate(("class A (alert) latency CDF", "class B (analytics) latency CDF")):
         ax[c].set_title(t)

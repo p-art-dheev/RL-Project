@@ -1,48 +1,44 @@
-# Digital-twin predictions for E8 (written before the real AWS runs)
+# Digital twin of the real testbed, and its predictions for E8 (written before the real runs)
 
-The twin is the simulator configured with the measured testbed (`testbed/twin.json`, from
-`python -m testbed.calibrate` on 2026-10-13, campus network in Coimbatore): node speeds per task type,
-laptop→Mumbai / laptop→Stockholm / Mumbai↔Stockholm round-trip and bandwidth.
-Settings = E8 (`experiments.run_testbed`): 6 min, test-split jobs, work_scale 0.2, rate_a 0.25, PACE w = 0.9,
-MERSEM-Balanced (w_s = 0.5, 120 s epochs). 5 seeds. Produced with `python -m experiments.twin_check`.
+The twin is the simulator configured with the measured testbed (`testbed/twin.json`): node speeds per task type,
+the slowdown when all cores of a node are busy, laptop→Mumbai / laptop→Stockholm / Mumbai↔Stockholm round trip
+and bandwidth (`python -m testbed.calibrate`, campus network in Coimbatore, 2026-10-13), plus the orchestrator's
+round trip per task. Settings = E8 (`experiments.run_testbed`): 6 min, test-split jobs, work_scale 0.2,
+rate_a 0.25, PACE w = 0.9, MERSEM-Balanced (w_s = 0.5, 120 s epochs). 5 seeds, `python -m experiments.twin_check`.
 
-## Why fine-tune: the generic policy did not transfer
+## How the twin was corrected by real measurements
 
-| Measured testbed vs simulator assumptions | Simulator (training) | Real testbed |
+| Step | What we learned | Fix |
 |---|---|---|
-| HOG detection on a server | ~0.3 s | 0.011–0.016 s |
-| ARM (t4g) vs x86 (c7i-flex) generic speed | 0.85× | ≈ 0.25–0.33× |
-| one HTTP call laptop→Mumbai / →Stockholm | ~35 / 160 ms | ~110 / 425 ms |
-| uplink bandwidth | 15–20 Mbps | 3–5 Mbps |
+| 1st calibration | HOG on a server takes 0.011–0.016 s (simulator: ~0.3 s); ARM 0.25–0.33× x86 on BLAS (sim: 0.85×); one HTTP call laptop→Mumbai / Stockholm ~110 / 425 ms (sim: 35 / 160 ms); uplink 3–5 Mbps. `models/pace.pt` (generic simulator only) was predicted to miss **32 % of alerts** without the shield. | Fine-tune PACE in the calibrated twin (`pace.rl.train --nodes`). |
+| Laptop edge | OpenCV used all 12 laptop threads, so the "1-core Pi-class" edge was faster than the servers. | One thread per task (`cv2.setNumThreads(1)`). |
+| 1st smoke test (CA-EFT, 2 min) | Real: 18 % alerts and 56 % analytics missed; twin: 0 %. The orchestrator held a core during the whole HTTP round trip, and the twin had no per-task controller round trip. | Tasks are sent when placed, workers fetch inputs while others compute and start tasks by class priority; twin and all schedulers (MERSEM included) see the controller round trip. |
+| 2nd smoke test | Alerts 0 % missed (p95 0.73 s). Task records: on c7i-flex (2 vCPU = 1 physical core) two tasks at once each run **1.7–1.8× slower**; t4g (2 physical cores) 1.0×. Twin assumed 1.15× everywhere. | `calibrate` measures the slowdown per node; the twin uses it. Twin now predicts this smoke test at 2/9 analytics misses vs 3/9 real, 0 alert misses vs 0. |
 
-With the first calibration, `models/pace.pt` (trained only in the generic randomised simulator) was predicted to
-miss **32 % of alerts** without the shield (the shield kept it at 0.2 %). Fine-tuning in the calibrated twin
-(`pace.rl.train --init models/pace.pt --nodes testbed/twin.json`, ~25 min on 4 CPUs, checkpoint chosen on the
-training-split validation runs, not on these test seeds) gives `models/pace_live.pt`.
+`models/pace_live.pt` = `pace.pt` fine-tuned in three stages in the successively corrected twins (~1 h on 4 CPUs);
+the final checkpoint (stage 3, iteration 57) was chosen on the training-split validation runs, not on the test seeds below.
 
 ## Predicted E8, nominal load (rate_bc = 0.075)
 
 | Scheduler | SLA A % | SLA B % | SLA A+B % | carbon dyn (g) | p95 alert (s) |
 |---|---|---|---|---|---|
-| PACE (pace_live, w=0.9) | 0.0 | 4.2 | 0.4 | 0.0112 | 0.83 |
-| PACE + shield (pace_live) | 0.0 | 2.5 | 0.3 | 0.0140 | 0.70 |
-| PACE + shield (generic pace.pt) | 0.3 | 2.9 | 0.5 | 0.0245 | 0.60 |
-| PACE (generic pace.pt) | 0.7 | 3.4 | 0.9 | 0.0218 | 0.60 |
-| MERSEM-Balanced | 0.1 | 5.8 | 0.7 | 0.0138 | 0.80 |
-| CA-EFT | 0.3 | 1.7 | 0.4 | 0.0151 | 0.80 |
-| EFT | 0.9 | 0.0 | 0.8 | 0.1371 | 0.13 |
+| PACE (w=0.9) | 0.0 | 25.1 | 2.0 | 0.0264 | 0.88 |
+| PACE + shield | 0.0 | 20.8 | 1.7 | 0.0309 | 0.47 |
+| MERSEM-Balanced | 2.7 | 46.9 | 6.1 | 0.0290 | 0.49 |
+| CA-EFT | 0.2 | 29.2 | 2.5 | 0.0471 | 0.49 |
+| EFT | 0.2 | 5.0 | 0.7 | 0.2121 | 0.12 |
 
-## Predicted E8, busy hour (rate_bc = 0.15, 2× analytics load)
+## Predicted E8, busy hour (rate_bc = 0.15)
 
 | Scheduler | SLA A % | SLA B % | SLA A+B % | carbon dyn (g) | p95 alert (s) |
 |---|---|---|---|---|---|
-| PACE (pace_live, w=0.9) | 0.5 | 13.2 | 2.4 | 0.0259 | 0.85 |
-| PACE + shield (pace_live) | 0.5 | 9.7 | 1.8 | 0.0321 | 0.71 |
-| MERSEM-Balanced | 2.0 | 19.3 | 4.6 | 0.0395 | 0.83 |
-| CA-EFT | 0.2 | 6.9 | 1.2 | 0.0365 | 0.85 |
-| EFT | 2.3 | 1.1 | 2.1 | 0.2649 | 0.54 |
+| PACE (w=0.9) | 0.5 | 35.6 | 5.6 | 0.0694 | 0.88 |
+| PACE + shield | 0.0 | 35.3 | 5.0 | 0.0766 | 0.48 |
+| MERSEM-Balanced | 4.5 | 60.2 | 12.3 | 0.0609 | 0.74 |
+| CA-EFT | 0.7 | 46.8 | 7.2 | 0.1114 | 0.63 |
 
-Predicted: PACE beats MERSEM on both SLA and carbon at both loads (nominal: −19 % carbon; busy: −2.2 pp SLA,
-−34 % carbon). Against CA-EFT, PACE trades a little SLA for 26–29 % less carbon. At nominal load the light
-testbed leaves little to optimise and the carbon totals are small, so real-world noise can blur the gaps;
-E8 (real) and E9 (sim-to-real) test these predictions.
+Predicted claims for the real runs: PACE misses fewer deadlines than MERSEM at both loads (−4 pp nominal, −7 pp busy)
+with less carbon at nominal load (−9 %) and somewhat more under the busy hour (+14 %, MERSEM missing 60 % of analytics
+jobs); PACE dominates CA-EFT (fewer misses and 38–44 % less carbon); EFT meets most deadlines at 7–8× the carbon.
+Analytics deadlines are hard for every scheduler on this testbed because a 2-vCPU x86 instance delivers ~1.1 cores
+when busy. E8 measures the real outcome; E9 compares it with these predictions.

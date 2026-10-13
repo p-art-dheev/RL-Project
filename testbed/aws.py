@@ -6,6 +6,7 @@
   python -m testbed.aws down      # terminate everything tagged project=pace, delete security groups
   python -m testbed.aws stop | start   # pause between sessions (start rewrites the new IPs)
   python -m testbed.aws allow     # your laptop's public IP changed (new Wi-Fi)? re-authorise it
+  python -m testbed.aws allow --wide   # campus network with several rotating public IPs: allow their /24s
 
 Credentials come from the standard AWS chain (aws configure / env vars). Workers are
 installed by cloud-init user-data (no SSH needed). The worker port is only opened to
@@ -17,6 +18,7 @@ from __future__ import annotations
 import argparse
 import base64
 import gzip
+import ipaddress
 import json
 import secrets
 import time
@@ -39,8 +41,32 @@ AMI = {"x86": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x8
        "arm": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"}
 
 
-def my_ip() -> str:
-    return urllib.request.urlopen("https://checkip.amazonaws.com", timeout=10).read().decode().strip()
+IP_SERVICES = ("https://checkip.amazonaws.com", "https://api.ipify.org", "https://icanhazip.com")
+
+
+def my_ips(rounds: int = 3) -> list[str]:
+    """All public IPs this laptop shows up as. Campus networks often balance new connections
+    over several ISP links, so a single lookup can miss the IP a worker connection will use."""
+    seen = set()
+    for _ in range(rounds):
+        for url in IP_SERVICES:
+            try:
+                ip = urllib.request.urlopen(url, timeout=5).read().decode().strip()
+                ipaddress.ip_address(ip)
+                seen.add(ip)
+            except Exception:  # noqa: BLE001
+                pass
+    if not seen:
+        raise SystemExit("could not determine the laptop's public IP (no internet?)")
+    return sorted(seen)
+
+
+def laptop_cidrs(wide: bool = False) -> list[str]:
+    ips = my_ips()
+    if len(ips) > 1:
+        print(f"note: this network uses {len(ips)} public IPs ({', '.join(ips)}), e.g. campus load balancing; "
+              "all are allowed")
+    return [str(ipaddress.ip_network(f"{ip}/{24 if wide else 32}", strict=False)) for ip in ips]
 
 
 def user_data(name: str, token: str) -> str:
@@ -112,12 +138,12 @@ def launch(region: str, arch: str, name: str, sg: str, token: str) -> dict:
 def up(a) -> None:
     suffix_pool = "" if a.pool == "a" else f"-{a.pool}"
     token = secrets.token_hex(16)
-    ip = my_ip()
-    print("laptop public IP:", ip)
+    cidrs = laptop_cidrs(a.wide)
+    print("laptop public IP:", ", ".join(cidrs))
     launched = []
     for region, tier, loc, zone, prefix in SITES:
         ec2 = boto3.client("ec2", region_name=region)
-        sg = ensure_sg(ec2, [f"{ip}/32"])
+        sg = ensure_sg(ec2, cidrs)
         for arch, suffix in (("x86", "x86"), ("arm", "arm")):
             name = f"{prefix}-{suffix}{suffix_pool}"
             launched.append({**launch(region, arch, name, sg, token), "tier": tier, "loc": loc, "zone": zone, "sg": sg})
@@ -169,12 +195,25 @@ def status(_a) -> None:
             continue
         cfg = json.loads(p.read_text())
         print(p.name)
+        hints = set()
         for n in cfg["nodes"]:
             try:
                 req = urllib.request.Request(n["url"] + "/status", headers={"X-Token": cfg["token"]})
                 print(f"  {n['name']:10s} OK  {urllib.request.urlopen(req, timeout=5).read().decode()[:90]}")
             except Exception as e:  # noqa: BLE001
                 print(f"  {n['name']:10s} --  {str(e)[:70]}")
+                msg, local = str(e).lower(), "127.0.0.1" in n["url"]
+                if local:
+                    hints.add("edge workers not running: start  python -m testbed.local --edges 2  in a second terminal")
+                elif "timed out" in msg:
+                    hints.add("timed out = AWS is dropping this laptop's current public IP: run  "
+                              "python -m testbed.aws allow  (still timing out? use  allow --wide)")
+                elif "refused" in msg:
+                    hints.add("connection refused = instance is up but the worker is still installing: wait 1-2 min")
+                elif "401" in msg:
+                    hints.add("401 = token mismatch: restart  python -m testbed.local  after  aws up")
+        for h in sorted(hints):
+            print("  hint:", h)
 
 
 def down(_a) -> None:
@@ -219,7 +258,7 @@ def check(_a) -> None:
                          "Check C:\\Users\\<you>\\.aws\\credentials (no .txt ending, [default] header, "
                          "no spaces inside the keys) - see docs/RUNBOOK.md section 1.")
     print("credentials OK:", ident["Arn"])
-    print("laptop public IP:", my_ip())
+    print("laptop public IP:", ", ".join(my_ips()))
     ok = True
     for region, *_r in SITES:
         ec2 = boto3.client("ec2", region_name=region)
@@ -237,16 +276,17 @@ def check(_a) -> None:
     print("\nAll checks passed. Next: python -m testbed.aws up" if ok else "\nSome checks failed; see above.")
 
 
-def allow(_a) -> None:
+def allow(a) -> None:
     """Re-authorise this laptop after its public IP changed (e.g. home -> college Wi-Fi)."""
-    ip = my_ip()
+    cidrs = laptop_cidrs(a.wide)
     for region, *_r in SITES:
-        ensure_sg(boto3.client("ec2", region_name=region), [f"{ip}/32"])
-    print("allowed", ip, "on port", PORT)
+        ensure_sg(boto3.client("ec2", region_name=region), cidrs)
+    print("allowed", ", ".join(cidrs), "on port", PORT)
 
 
-def start(_a) -> None:
+def start(a) -> None:
     """Start stopped instances and rewrite node URLs with their new public IPs."""
+    cidrs = laptop_cidrs(a.wide)
     for p in sorted(ROOT.glob("nodes*.json")):
         if p.name == "nodes.local.json":
             continue
@@ -262,7 +302,7 @@ def start(_a) -> None:
             for n in cfg["nodes"]:
                 if n.get("instance") in desc:
                     n["url"] = f"http://{desc[n['instance']]['PublicIpAddress']}:{PORT}"
-            ensure_sg(ec2, [f"{d['PublicIpAddress']}/32" for d in desc.values()] + [f"{my_ip()}/32"])
+            ensure_sg(ec2, [f"{d['PublicIpAddress']}/32" for d in desc.values()] + cidrs)
         p.write_text(json.dumps(cfg, indent=1))
         print("updated", p)
 
@@ -272,6 +312,8 @@ def main():
     ap.add_argument("cmd", choices=["check", "up", "status", "down", "stop", "start", "allow"])
     ap.add_argument("--edges", type=int, default=2, help="edge workers on the laptop")
     ap.add_argument("--pool", default="a", help="second pool 'b' for a live side-by-side (A/B) demo")
+    ap.add_argument("--wide", action="store_true",
+                    help="allow the /24 of each laptop IP (networks that rotate public IPs; workers still need the token)")
     a = ap.parse_args()
     {"check": check, "up": up, "status": status, "down": down, "stop": stop, "start": start,
      "allow": allow}[a.cmd](a)

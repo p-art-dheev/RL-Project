@@ -41,7 +41,7 @@ AMI = {"x86": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x8
        "arm": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64"}
 
 
-IP_SERVICES = ("https://checkip.amazonaws.com", "https://api.ipify.org", "https://icanhazip.com")
+IP_SERVICES = ("https://checkip.amazonaws.com", "https://api.ipify.org", "https://ipv4.icanhazip.com")
 
 
 def my_ips(rounds: int = 3) -> list[str]:
@@ -52,8 +52,8 @@ def my_ips(rounds: int = 3) -> list[str]:
         for url in IP_SERVICES:
             try:
                 ip = urllib.request.urlopen(url, timeout=5).read().decode().strip()
-                ipaddress.ip_address(ip)
-                seen.add(ip)
+                if ipaddress.ip_address(ip).version == 4:  # the workers are reached over IPv4
+                    seen.add(ip)
             except Exception:  # noqa: BLE001
                 pass
     if not seen:
@@ -63,6 +63,8 @@ def my_ips(rounds: int = 3) -> list[str]:
 
 def laptop_cidrs(wide: bool = False) -> list[str]:
     ips = my_ips()
+    if any(ip.startswith(("104.28.", "104.16.", "172.64.", "162.158.")) for ip in ips):
+        print("warning: these look like Cloudflare WARP / VPN addresses; switch the VPN off so AWS sees your real IP")
     if len(ips) > 1:
         print(f"note: this network uses {len(ips)} public IPs ({', '.join(ips)}), e.g. campus load balancing; "
               "all are allowed")
@@ -234,7 +236,9 @@ def down(_a) -> None:
                     break
                 except ClientError:
                     time.sleep(5)
-    print("all PACE resources removed")
+            else:
+                print("could not delete", sg["GroupId"], "in", region, "(still in use?) - run 'down' again in a minute")
+    print("done")
 
 
 def stop(_a) -> None:

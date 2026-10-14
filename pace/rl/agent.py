@@ -76,6 +76,10 @@ class PACE(Scheduler):
             for k, n in enumerate(ctx.nodes):
                 if n.idx == tgt and n.allowed:
                     return k
+        if len(ctx.nodes) > self._xn.shape[1]:  # more candidates than the training size: grow the buffers
+            k = len(ctx.nodes)
+            self._xn = np.zeros((1, k, F_N), np.float32)
+            self._m = np.zeros((1, k + 1), np.bool_)
         featurize(ctx, self.w, self._xn[0], self._xt[0], self._m[0])
         if self.shield:
             self._apply_shield(ctx)
@@ -83,7 +87,7 @@ class PACE(Scheduler):
         a = int(torch.argmax(logits[0]))
         self.decide_s += time.perf_counter() - t0
         self.n_dec += 1
-        if a == K_MAX:
+        if a == self._xn.shape[1]:
             return DEFER
         if self.job_level and not ctx.task.pinned:
             self.jobmap[ctx.task.job_id] = ctx.nodes[a].idx

@@ -17,10 +17,11 @@ def featurize(ctx: Ctx, w: float, out_n: np.ndarray | None = None, out_t: np.nda
     t = ctx.task
     nodes = ctx.nodes
     K = len(nodes)
-    assert K <= K_MAX, f"too many candidates ({K} > {K_MAX})"
-    xn = out_n if out_n is not None else np.zeros((K_MAX, F_N), np.float32)
+    kmax = max(K_MAX, K) if out_m is None else len(out_m) - 1  # slot kmax = DEFER; K_MAX is only the training size
+    assert K <= kmax, f"too many candidates ({K} > {kmax})"
+    xn = out_n if out_n is not None else np.zeros((kmax, F_N), np.float32)
     xt = out_t if out_t is not None else np.zeros(F_T, np.float32)
-    m = out_m if out_m is not None else np.zeros(K_MAX + 1, np.bool_)
+    m = out_m if out_m is not None else np.zeros(kmax + 1, np.bool_)
     xn[:] = 0.0
     m[:] = False
     budget = max(t.lf - ctx.now, 0.05)
@@ -46,7 +47,7 @@ def featurize(ctx: Ctx, w: float, out_n: np.ndarray | None = None, out_t: np.nda
         row[16] = float(ef <= budget)
         row[17] = float(ef <= 0.4 * budget)
         m[k] = n.allowed
-    m[K_MAX] = ctx.can_defer
+    m[kmax] = ctx.can_defer
     xt[:] = 0.0
     xt[t.cls] = 1.0
     xt[3] = math.log1p(t.work_est)

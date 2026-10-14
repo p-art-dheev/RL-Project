@@ -1,4 +1,4 @@
-"""Simulation experiments E1-E7 (see docs/PROPOSAL.md §11). Results -> results/sim/*.csv
+"""Simulation experiments E1-E6 (see docs/PROPOSAL.md §11). Results -> results/sim/*.csv
 
   python -m experiments.run_sim --exp all --seeds 10 --procs 4
 
@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pace.config import Workload, city_topology, testbed_topology
+from pace.config import CLOUD, Topology, Workload, city_topology, cloud_node, testbed_topology
 from pace.sched import heuristics as H
 from pace.sched.mersem import MERSEM
 from pace.sim.core import Simulator
@@ -65,6 +65,31 @@ CORE = ["Random", "Edge-only", "Fog-only", "Cloud-only", "EFT", "Carbon-greedy",
 KEY = ["EFT", "CA-EFT", "MERSEM-Balanced", "MERSEM-SLA", "PACE(w=0.9)", "PACE+shield(w=0.9)", "PACE+shield-target5%"]
 
 
+def frankfurt_topology() -> Topology:
+    """E6: the cloud moves to AWS eu-central-1 Frankfurt (grid zone DE), a region and zone never seen in training."""
+    topo = city_topology()
+    topo.nodes = [n for n in topo.nodes if n.loc != "ARN"]
+    topo.nodes += [cloud_node(f"fra{i}", CLOUD, "FRA", "DE", "x86" if i % 2 == 0 else "arm") for i in range(4)]
+    topo.net = {k: v for k, v in topo.net.items() if "ARN" not in k}
+    topo.net.update({("CBE", "FRA"): (0.140, 15.0), ("BOM", "FRA"): (0.110, 200.0)})
+    topo.country = {**topo.country, "FRA": "DE"}
+    return topo
+
+
+def slow_net_topology() -> Topology:
+    """E6: RTT x2 and bandwidth x0.3 on every WAN link (training sampled x0.7-1.5 and x0.5-1.5)."""
+    topo = city_topology()
+    topo.net = {k: (rtt * 2.0, bw * 0.3) for k, (rtt, bw) in topo.net.items()}
+    return topo
+
+
+TOPOS = {
+    "testbed": testbed_topology, "city": city_topology,
+    "city-large": lambda: city_topology(16, 6, 8),  # training sampled 2-6 edge, 1-3 fog, 1-3 cloud nodes
+    "frankfurt": frankfurt_topology, "slow-net": slow_net_topology,
+}
+
+
 def scenarios(exp: str):
     """Yield (experiment, scenario label, topology factory name, workload kwargs, method list)."""
     base = dict(split="test", horizon=3600.0, rate_a=0.25, rate_bc=0.015, est_noise=0.2)
@@ -84,6 +109,13 @@ def scenarios(exp: str):
     if exp in ("E5", "all"):
         yield "E5", "rush hour (x2.5 for 15 min)", "testbed", {**base, "bursts": [(1200.0, 900.0, 2.5)]}, \
             ["CA-EFT", "MERSEM-Balanced", "PACE+shield(w=0.5)", "PACE+shield-target2%", "PACE+shield-target5%"]
+    if exp in ("E6", "all"):  # zero-shot generalisation: setups outside the training distribution
+        city = {**base, "rate_bc": 0.03}
+        yield "E6", "seen: city nominal", "city", city, KEY
+        yield "E6", "unseen: 2x larger city (16/6/8 nodes)", "city-large", {**city, "rate_bc": 0.06}, KEY
+        yield "E6", "unseen: cloud in Frankfurt (zone DE)", "frankfurt", city, KEY
+        yield "E6", "unseen: slow WAN (RTT x2, bandwidth x0.3)", "slow-net", city, KEY
+        yield "E6", "unseen: 2x heavier jobs, 3x more data", "city", {**city, "work_scale": 2.0, "data_scale": 3.0}, KEY
 
 
 def run_one(job):
@@ -92,7 +124,7 @@ def run_one(job):
     MODEL = model
     import torch
     torch.set_num_threads(1)
-    topo = testbed_topology() if topo_name == "testbed" else city_topology()
+    topo = TOPOS[topo_name]()
     wl = Workload(**wl_kw)
     wl.carbon_source = carbon
     wl.start_hour = float((seed * 5) % 24)
@@ -130,7 +162,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     jobs = []
     for exp, label, topo, wl_kw, ms in scenarios(a.exp):
-        n_seeds = a.seeds if exp == "E1" else max(3, a.seeds // 2)
+        n_seeds = a.seeds if exp in ("E1", "E6") else max(3, a.seeds // 2)
         for m in ms:
             for s in range(n_seeds):
                 jobs.append((exp, label, topo, wl_kw, m, s, a.carbon, a.model))

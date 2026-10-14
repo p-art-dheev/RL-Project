@@ -23,11 +23,11 @@ class PACENet(nn.Module):
         self.value = nn.Sequential(nn.Linear(F_T + 2 * hidden, hidden), nn.ReLU(), nn.Linear(hidden, 1))
 
     def forward(self, xn: torch.Tensor, xt: torch.Tensor, mask: torch.Tensor):
-        B = xn.shape[0]
-        h = self.node(torch.cat([xn, xt.unsqueeze(1).expand(B, K_MAX, F_T)], dim=-1))
+        B, K = xn.shape[0], xn.shape[1]  # any number of node slots: the scorer is shared across nodes
+        h = self.node(torch.cat([xn, xt.unsqueeze(1).expand(B, K, F_T)], dim=-1))
         logits = torch.cat([self.score(h).squeeze(-1), self.defer(xt)], dim=-1)
         logits = logits.masked_fill(~mask, NEG)
-        nm = mask[:, :K_MAX].unsqueeze(-1)
+        nm = mask[:, :K].unsqueeze(-1)
         hmax = h.masked_fill(~nm, NEG).max(dim=1).values
         hmean = (h * nm).sum(1) / nm.sum(1).clamp(min=1)
         v = self.value(torch.cat([xt, hmax, hmean], dim=-1)).squeeze(-1)

@@ -20,6 +20,7 @@ PACE (Preference-conditioned, Adaptive, Carbon-aware Edge scheduler) places ever
 - **PACE vs MERSEM:** −12 pp SLA violations and −22% dynamic carbon (Wilcoxon p = 0.002). On the larger city topology: −17 pp and −34%.
 - **PACE + shield vs CA-EFT:** better on alerts, equal on analytics (within the CI), −26% carbon (p = 0.002). Pure PACE misses more large analytics jobs; see `results/RESULTS.md` for the per-class discussion.
 - Under rush hours, node crashes, random failures, 2× load and ±40% runtime-estimate noise, a PACE variant has the fewest violations in every scenario. PACE + shield beats both CA-EFT and MERSEM in each one, with less carbon than CA-EFT.
+- **Unseen setups, no retraining (E6):** on a 2× larger city, a cloud moved to Frankfurt (a grid zone never seen) and 2× heavier jobs, PACE beats MERSEM by 15–25 pp and CA-EFT by 2–5 pp in 10/10 seeds (p = 0.002), with less carbon than both. **It fails on a much slower WAN** (RTT ×2, bandwidth ×0.3): 17% missed vs CA-EFT's 1.4%, because it keeps sending alerts to Stockholm. See `results/E6_GENERALISATION.md`.
 - Carbon intensities are **synthetic** hourly profiles until the Electricity Maps CSVs are added.
 
 ## Headline results (real AWS testbed: laptop edge in Coimbatore, EC2 Mumbai + Stockholm)

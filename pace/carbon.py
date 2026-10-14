@@ -23,6 +23,7 @@ SYNTH = {
     "IN-SO": dict(mean=560.0, solar=0.20, evening=0.06, noise=0.03),
     "IN-WE": dict(mean=680.0, solar=0.12, evening=0.05, noise=0.03),
     "SE-SE3": dict(mean=35.0, solar=0.10, evening=0.15, noise=0.12),
+    "DE": dict(mean=380.0, solar=0.30, evening=0.08, noise=0.10),  # E6 only: a zone never seen in training
 }
 
 

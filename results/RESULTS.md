@@ -1,6 +1,6 @@
 # PACE results (simulation)
 
-> Real AWS testbed results: `REAL_TESTBED.md`.
+> Real AWS testbed results: `REAL_TESTBED.md`. Generalisation to unseen setups (E6): `E6_GENERALISATION.md`.
 
 > carbon: SYNTHETIC hourly profiles (replace with Electricity Maps data). All runs use the dataset's held-out test split; each seed is a different day/hour, workload and carbon trace shared by every method.
 

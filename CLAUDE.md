@@ -21,7 +21,7 @@ safety shield, SLA-target controller). Base paper to beat: MERSEM (arXiv:2605.13
 - Animated methodology page: `docs/methodology.html`.
 
 ## State on 2026-10-14
-- Done: simulation E1-E7; real AWS E8 (static estimates), E8b nominal + busy hour (online network estimate), E9
+- Done: simulation E1-E6 (E6 = zero-shot generalisation, `results/E6_GENERALISATION.md`; E7 is only the decision time); real AWS E8 (static estimates), E8b nominal + busy hour (online network estimate), E9
   sim-to-real; report, figure and deck updated. Live runs use `models/pace_live.pt` (fine-tuned in the calibrated twin).
 - Headline (real AWS, E8b): PACE missed fewer deadlines than MERSEM in all 6 paired runs (-6.6 pp, p = 0.031) at +15%
   carbon (not significant); same deadline performance as CA-EFT with 15% less carbon (p = 0.031).

@@ -17,7 +17,7 @@ safety shield, SLA-target controller). Base paper to beat: MERSEM (arXiv:2605.13
 - Simulation results: `results/RESULTS.md`. Real AWS results: `results/REAL_TESTBED.md` (+ `results/plots/e8_real.png`).
 - What the real testbed taught us (three sim-to-real gaps and fixes): `results/testbed/E8_ANALYSIS.md`,
   `results/testbed/TWIN_PREDICTION.md`; excluded runs and why: `results/testbed/invalid/README.md`.
-- Slide deck (17 slides): https://claude.ai/artifact/X9Ky61KvcCb7Ujkd247Ceh; sources mirrored in `docs/slides/project/`.
+- Slide deck (18 slides, incl. E6): https://claude.ai/artifact/X9Ky61KvcCb7Ujkd247Ceh; sources mirrored in `docs/slides/project/`.
 - Animated methodology page: `docs/methodology.html`.
 
 ## State on 2026-10-14
@@ -32,6 +32,8 @@ safety shield, SLA-target controller). Base paper to beat: MERSEM (arXiv:2605.13
   the crash button now holds the node out for the full 60 s (the EC2 worker restarts under systemd in ~2 s and forgot
   the outage), and a new SLA target resets the controller's integral (before, w stayed flat after 0.05 -> 0.01).
 - Deck cover filled in (team of four, 22AIE401 Reinforcement Learning, guide Dr. Palmani Duraisamy).
+- Carbon: decided on 2026-10-14 to keep the SYNTHETIC profiles (Electricity Maps no longer offers free downloads;
+  no free hourly source for India). It is listed as a limitation in the deck and README.
 - Remaining: `python -m testbed.aws stop` at the end of each day, `aws down` after presenting.
 
 ## Testbed gotchas (learned the hard way)

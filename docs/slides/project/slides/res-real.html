@@ -1,0 +1,21 @@
+<section id="res-real" data-transition="fade" style="background:#F6F5F1;color:#1B2333;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#2B6CB0;letter-spacing:2px;text-transform:uppercase;font-weight:600">Result 5 · real AWS testbed</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">On real machines, PACE misses fewer deadlines than MERSEM in every paired run</h2>
+</div>
+<div style="display:flex;gap:48px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:24px;width:620px">
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;color:#DD6B20;line-height:1.0">6 / 6</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">paired runs with fewer missed deadlines than MERSEM: −6.6 pp, p = 0.031; carbon +15%, not significant</p>
+</div>
+<div style="background:#FFFFFF;border:1px solid #DCDFE4;border-radius:16px;padding:32px;display:flex;flex-direction:column;gap:6px">
+<p style="font-family:'Space Grotesk', Arial, sans-serif;font-size:72px;font-weight:700;color:#2B6CB0;line-height:1.0">−15%</p>
+<p style="font-size:28px;line-height:1.4;color:#4A5568">carbon vs CA-EFT at the same deadline performance (p = 0.031)</p>
+</div>
+</div>
+<img src="/_blob/b6f4f6e1f87ceed26018b124b09df84e" alt="Two scatter plots of deadlines missed versus operational carbon on the real AWS testbed, nominal load and busy hour: PACE and PACE with shield sit low; MERSEM higher with slightly less carbon; CA-EFT similar misses with more carbon; EFT far right with six times the carbon" style="width:996px;height:390px;object-fit:contain;background:#FFFFFF;border-radius:16px">
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7280">Laptop edge in Coimbatore, EC2 in Mumbai and Stockholm · 6-minute runs, schedulers interleaved per seed · 3 seeds at nominal load and 3 in a busy hour · PACE + shield missed no alerts in the busy hour</p>
+<aside>Real-AWS experiment E8b with the online network estimate. Six paired runs (3 nominal, 3 busy hour), Wilcoxon signed-rank; with six pairs 0.031 is the smallest attainable p. At w = 0.9 PACE favours deadlines, so on AWS it spent about 15% more operational carbon than MERSEM-Balanced; this difference is not significant, and neither method dominates on both axes here. Against CA-EFT, the strongest heuristic, the deadline performance is the same and the carbon is 15% lower. Full tables: results/REAL_TESTBED.md.</aside>
+</section>

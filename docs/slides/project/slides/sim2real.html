@@ -1,0 +1,22 @@
+<section id="sim2real" data-transition="fade" style="background:#14213D;color:#F6F5F1;font-family:'IBM Plex Sans', Arial, sans-serif;padding:128px;display:flex;flex-direction:column;gap:48px">
+<div style="display:flex;flex-direction:column;gap:16px">
+<p style="font-size:26px;color:#F6AD55;letter-spacing:2px;text-transform:uppercase;font-weight:600">What the real testbed taught us</p>
+<h2 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:64px;font-weight:700;line-height:1.1">Three sim-to-real gaps, each measured, fixed and fed back into the twin</h2>
+</div>
+<div style="display:flex;gap:32px">
+<div style="flex:1;background:#1E2D4F;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#F6AD55;line-height:1.1">Servers waited on the network</h3>
+<p style="font-size:28px;line-height:1.4;color:#D5E1EE">Each task held a core for its whole HTTP round trip. Tasks are now sent when placed, so transfers overlap with compute: smoke-test alert misses 18% → 0%.</p>
+</div>
+<div style="flex:1;background:#1E2D4F;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#F6AD55;line-height:1.1">Two vCPUs are one core</h3>
+<p style="font-size:28px;line-height:1.4;color:#D5E1EE">On c7i-flex, two tasks at once each run 1.75× slower; on ARM t4g, 1.0×. Calibration now measures it, and the twin then predicted the next smoke test.</p>
+</div>
+<div style="flex:1;background:#1E2D4F;border-radius:16px;padding:36px;display:flex;flex-direction:column;gap:12px">
+<h3 style="font-family:'Space Grotesk', Arial, sans-serif;font-size:36px;font-weight:700;color:#F6AD55;line-height:1.1">The network drifts</h3>
+<p style="font-size:28px;line-height:1.4;color:#D5E1EE">Upload time to Mumbai doubled over one evening. An online latency estimate now feeds every scheduler: PACE's misses 14.7% → 3.8%.</p>
+</div>
+</div>
+<p style="font-size:32px;line-height:1.4;color:#D5E1EE;width:1600px">PACE was fine-tuned in the calibrated digital twin of this testbed, and each prediction was written down before the real run.</p>
+<aside>Gap 1: the first orchestrator held a server core during the upload, the input fetch and the reply, so Stockholm's two cores mostly waited on a 400 ms network; the simulator only counted computation. Gap 2: per-task timings showed 1.68 to 1.83 times longer compute when two tasks shared a c7i-flex.large, whose two vCPUs are hyperthreads of one physical core. Gap 3: the median frame upload to Mumbai went from 0.25 s to 0.55 s during a 1.6-hour run, independent of our own traffic; schedulers that trusted the static calibration missed alerts. The fix measures recent network time per region and adds the 90th percentile of the residual to every scheduler's estimate. Documents: results/testbed/E8_ANALYSIS.md and TWIN_PREDICTION.md.</aside>
+</section>

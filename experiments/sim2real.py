@@ -41,7 +41,7 @@ def replay(run: dict, nodes: str):
 
 
 def main():
-    runs = sorted(Path("results/testbed").rglob("e8_*.json"))
+    runs = sorted(r for r in Path("results/testbed").rglob("e8_*.json") if "invalid" not in r.parts)
     if not runs:
         print("no testbed runs found in results/testbed/ (run experiments.run_testbed first)")
         return

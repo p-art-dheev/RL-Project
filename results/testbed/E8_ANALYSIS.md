@@ -52,3 +52,27 @@ alerts stay on the edge while the network is degraded.
 
 E8b repeats E8 with the online estimate (`results/testbed/adaptive/`). Network conditions at a different time of
 day differ, so E8 and E8b are compared within each run set (interleaved), not across them.
+
+## E8b — the same experiment with the online network estimate (results/testbed/adaptive/)
+
+Run 2026-10-13 night, same settings, interleaved, 3 seeds. EFT's runs were hit by an orchestrator bug and are
+excluded (see `invalid/README.md`); the four runs below had no failures and no unfinished jobs.
+
+| Scheduler | Alerts missed | Analytics missed | A+B missed | Carbon dyn (g) | p95 alert (s) |
+|---|---|---|---|---|---|
+| **PACE** | 1.4 % | **30.3 %** | **3.8 %** | 0.0440 | 0.72 |
+| PACE + shield | 4.2 % | 29.0 % | 6.1 % | 0.0495 | 1.07 |
+| MERSEM-Balanced | 6.1 % | 45.9 % | 9.4 % | **0.0374** | 1.09 |
+| CA-EFT | 0.8 % | 37.0 % | 3.7 % | 0.0509 | 0.44 |
+
+Per seed (A+B missed): PACE 7.6 / 1.2 / 2.5 %; MERSEM 17.3 / 6.1 / 4.6 %; CA-EFT 4.9 / 2.9 / 3.3 %;
+PACE+shield 4.0 / 8.6 / 5.9 %.
+
+- **PACE vs MERSEM (the base paper):** fewer missed alerts (1.4 vs 6.1 %), analytics (30 vs 46 %) and overall
+  (3.8 vs 9.4 %), better in every seed, for 18 % more operational carbon (0.044 vs 0.037 g). At w = 0.9 PACE is
+  set to favour deadlines; MERSEM-Balanced sits at a lower-carbon, higher-miss point, so neither dominates on
+  this run (a lower w is PACE's knob for that trade-off; not measured on AWS).
+- **PACE vs CA-EFT:** the same deadline performance (3.8 vs 3.7 %) with 14 % less carbon and fewer analytics misses.
+- **Effect of the online estimate** (E8 → E8b, different hours so only indicative): PACE 14.7 → 3.8 % missed,
+  CA-EFT 22.7 → 3.7 %, PACE+shield 11.8 → 6.1 %, MERSEM 10.3 → 9.4 %. The schedulers that rely on per-task latency
+  estimates gain the most; PACE spends more carbon than in E8 because it keeps alerts local when Mumbai is slow.

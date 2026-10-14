@@ -9,6 +9,7 @@ overlap with computation as in the scheduler's model.
 Endpoints (all require header X-Token: $PACE_TOKEN):
   POST /run         execute a task (fetch inputs, wait for a core by priority, compute, store output)
   GET  /blob/{key}  download a stored task output (used by downstream tasks)
+  POST /gc          drop the stored outputs of finished jobs ({"prefix": run-job-})
   GET  /status      liveness + load
   GET  /calibrate   measure this node's speed for each task type
   POST /echo        upload-bandwidth probe;  GET /bytes/{n} download probe
@@ -40,6 +41,7 @@ TOKEN = os.environ.get("PACE_TOKEN", "pace-demo")
 NAME = os.environ.get("PACE_NAME", os.uname().nodename if hasattr(os, "uname") else "worker")
 CORES = int(os.environ.get("PACE_CORES", str(os.cpu_count() or 1)))
 SLOWDOWN = float(os.environ.get("PACE_SLOWDOWN", "1.0"))
+BLOB_MB = float(os.environ.get("PACE_BLOB_MB", "500"))  # task outputs kept in memory for downstream tasks
 ITERS_PER_UNIT = int(os.environ.get("PACE_ITERS", "3500"))  # ~1 s per work unit on a c7i-class vCPU
 MAT = 160
 
@@ -136,6 +138,7 @@ class Worker:
         self.pool = ProcessPoolExecutor(CORES)
         self.gate = PrioGate(CORES)
         self.blobs: collections.OrderedDict[str, bytes] = collections.OrderedDict()
+        self.blob_bytes = 0
         self.inflight = 0
         self.down_until = 0.0
         self.started = time.time()
@@ -148,9 +151,19 @@ class Worker:
         return self.session
 
     def store(self, key: str, data: bytes) -> None:
+        old = self.blobs.pop(key, None)
+        self.blob_bytes += len(data) - (len(old) if old is not None else 0)
         self.blobs[key] = data
-        while len(self.blobs) > 400:
-            self.blobs.popitem(last=False)
+        while self.blob_bytes > BLOB_MB * 1e6 and len(self.blobs) > 1:  # oldest first; /gc frees finished jobs
+            _k, v = self.blobs.popitem(last=False)
+            self.blob_bytes -= len(v)
+
+    async def gc(self, req: web.Request) -> web.Response:
+        prefix = (await req.json()).get("prefix", "")
+        keys = [k for k in self.blobs if prefix and k.startswith(prefix)]
+        for k in keys:
+            self.blob_bytes -= len(self.blobs.pop(k))
+        return web.json_response({"freed": len(keys)})
 
     async def run(self, req: web.Request) -> web.Response:
         if time.time() < self.down_until:
@@ -169,7 +182,10 @@ class Worker:
                     r.raise_for_status()
                     return await r.read()
 
-            datas = await asyncio.gather(*[fetch(u) for u in body.get("inputs", [])])
+            try:
+                datas = await asyncio.gather(*[fetch(u) for u in body.get("inputs", [])])
+            except Exception as e:  # noqa: BLE001 - an input is missing or its node unreachable: not this node's fault
+                return web.json_response({"error": f"input: {e}"[:200]}, status=424)
             fetched = sum(len(d) for d in datas)
             for d in datas:
                 if body.get("typ") == "vision" and d[:2] == b"\xff\xd8":
@@ -242,10 +258,11 @@ class Worker:
     async def crash(self, req: web.Request) -> web.Response:
         secs = float(req.query.get("secs", "60"))
         self.down_until = time.time() + secs
-        self.pool.shutdown(wait=False, cancel_futures=True)
-        for p in list(getattr(self.pool, "_processes", {}).values()):
+        old, self.pool = self.pool, ProcessPoolExecutor(CORES)  # fresh workers for after the outage
+        procs = list((getattr(old, "_processes", None) or {}).values())  # read before shutdown clears it
+        old.shutdown(wait=False, cancel_futures=True)
+        for p in procs:  # kill the running tasks
             p.terminate()
-        self.pool = ProcessPoolExecutor(CORES)
         return web.json_response({"down_for": secs})
 
 
@@ -261,7 +278,7 @@ def make_app() -> web.Application:
     app = web.Application(middlewares=[auth], client_max_size=64 * 1024 ** 2)
     app.add_routes([web.post("/run", w.run), web.get("/blob/{key}", w.blob), web.get("/status", w.status),
                     web.get("/calibrate", w.calibrate), web.post("/echo", w.echo), web.get("/bytes/{n}", w.bytes_),
-                    web.get("/probe", w.probe), web.post("/admin/crash", w.crash)])
+                    web.get("/probe", w.probe), web.post("/admin/crash", w.crash), web.post("/gc", w.gc)])
     return app
 
 

@@ -5,7 +5,8 @@ It *reuses* the simulator's decision-context builder, job bookkeeping and metric
 in simulation and on AWS. Only the execution mechanics differ: tasks are sent to
 real workers over HTTP, inputs move between real nodes, runtimes are measured.
 The network estimates start from the calibration and are corrected online from the network time of
-recently completed tasks (90th percentile per region), so all schedulers see latency drift.
+recently completed tasks (90th percentile per region, at most 3 s), so all schedulers see latency drift.
+A failed task is placed again (up to 3 times); only the heartbeat or a worker's "503 down" takes a node out.
 
   python -m testbed.orchestrator --nodes testbed/nodes.json --scheduler pace-shield --minutes 10
   open http://localhost:8080  (live dashboard; fault injection, SLA target, carbon spike)
@@ -95,6 +96,10 @@ def make_scheduler(a):
     return table[name]()
 
 
+class NodeDown(Exception):
+    pass
+
+
 class LiveOrchestrator(Simulator):
     """Duck-types Simulator: same _ctx / _job_done / summary, real execution."""
 
@@ -138,6 +143,8 @@ class LiveOrchestrator(Simulator):
         self.cur = None
         self.cur_ctx = None
         self.hb_fail = {n.idx: 0 for n in self.nodes}
+        self.attempts: dict[int, int] = {}
+        self.closing = False
         self.decide_wall = 0.0
 
     # --------------------------------------------------------------- time
@@ -160,6 +167,9 @@ class LiveOrchestrator(Simulator):
             if task.state != READY:
                 continue
             ctx = self._ctx(task)
+            if not any(n.allowed for n in ctx.nodes):  # every candidate is down: try again in a second
+                asyncio.get_running_loop().call_later(1.0, self._wake, task, task.ver)
+                continue
             self.cur, self.cur_ctx = task, ctx
             t0 = time.perf_counter()
             k = self.sched.decide(ctx)
@@ -235,10 +245,17 @@ class LiveOrchestrator(Simulator):
         d = self.net_resid.setdefault(loc, deque(maxlen=30))
         d.append(resid)
         if len(d) >= 5:
-            corr = max(0.0, float(np.quantile(list(d), 0.9)))
+            corr = min(3.0, max(0.0, float(np.quantile(list(d), 0.9))))
             if abs(corr - self.net_corr.get(loc, 0.0)) > 0.05:
                 self.net_trace.append(dict(t=round(self.now, 1), loc=loc, extra_s=round(corr, 3)))
             self.net_corr[loc] = corr
+
+    async def _gc(self, node: SNode, prefix: str):
+        try:
+            async with self.http.post(f"{node.spec.url}/gc", json={"prefix": prefix}) as r:
+                await r.read()
+        except Exception:  # noqa: BLE001 - best effort (older workers have no /gc)
+            pass
 
     def _key(self, task):
         return f"{self.run_id}-{task.job.spec.id}-{task.i}"
@@ -271,24 +288,24 @@ class LiveOrchestrator(Simulator):
             if not js.preds[task.i] and not task.spec.pinned and node.idx != task.job.origin:
                 body["inline"].append(base64.b64encode(os.urandom(int(js.input_mb * 1e6))).decode())
             async with self.http.post(f"{node.spec.url}/run", json=body) as r:
+                if r.status == 503:
+                    raise NodeDown(f"{node.spec.name} down")
                 if r.status != 200:
-                    raise RuntimeError(f"{node.spec.name} HTTP {r.status}")
+                    raise RuntimeError(f"{node.spec.name} HTTP {r.status}: {(await r.text())[:60]}")
                 res = await r.json()
-        except Exception as e:  # noqa: BLE001 - any failure means the node/link is down
-            if ver == task.ver and node.alive:
-                self.events.append(dict(t=round(self.now, 2), ev="task-failed", node=node.spec.name, err=str(e)[:80]))
-                self._fail_node(node)
+        except Exception as e:  # noqa: BLE001
+            if self.closing or ver != task.ver:
+                return
+            if isinstance(e, NodeDown):  # the worker says it is down (crash): take the node out now
+                if node.alive:
+                    self.events.append(dict(t=round(self.now, 2), ev="task-failed", node=node.spec.name, err=str(e)[:80]))
+                    self._fail_node(node)
+            else:  # one task failed (reset, timeout, lost input): place it again; outages are the heartbeat's job
+                self._retry(task, node, f"{type(e).__name__}: {e}")
             return
         if ver != task.ver:
             return
-        if task in node.running:
-            node.running.discard(task)
-        elif node.queue.remove(task):  # finished before the mirror queue promoted it
-            sp = node.spec.speed[task.spec.typ]
-            c = js.cls
-            node.backlog = max(0.0, node.backlog - task.spec.work_est / sp)
-            node.backlog_cls[c] = max(0.0, node.backlog_cls[c] - task.spec.work_est / sp)
-            node.count_cls[c] = max(0, node.count_cls[c] - 1)
+        if self._unmirror(task, node) == "queued":  # finished before the mirror queue promoted it
             task.start = self.now - float(res.get("t_exec", 0.0))
         task.end = self.now
         t_exec = float(res.get("t_exec", task.end - task.start))
@@ -316,8 +333,40 @@ class LiveOrchestrator(Simulator):
         if job.n_done == len(job.tasks):
             self._job_done(job)
             self.frames.pop(js.id, None)
+            for n in {t.node for t in job.tasks if t.node is not None}:
+                asyncio.create_task(self._gc(n, f"{self.run_id}-{js.id}-"))
         self._pump(node)
         self._drain()
+
+    def _unmirror(self, task, node: SNode):
+        """Take a task out of the node's mirror queue / running set."""
+        if task in node.running:
+            node.running.discard(task)
+            return "running"
+        if node.queue.remove(task):
+            sp = node.spec.speed[task.spec.typ]
+            c = task.job.spec.cls
+            node.backlog = max(0.0, node.backlog - task.spec.work_est / sp)
+            node.backlog_cls[c] = max(0.0, node.backlog_cls[c] - task.spec.work_est / sp)
+            node.count_cls[c] = max(0, node.count_cls[c] - 1)
+            return "queued"
+        return None
+
+    def _retry(self, task, node: SNode, err: str):
+        n = self.attempts.get(id(task), 0) + 1
+        self.attempts[id(task)] = n
+        self._unmirror(task, node)
+        self.placed_at.pop(id(task), None)
+        task.ver += 1
+        task.node = None
+        self.events.append(dict(t=round(self.now, 2), ev="task-retry" if n <= 3 else "task-abandoned",
+                                node=node.spec.name, err=err[:80], attempt=n))
+        self._pump(node)
+        if n <= 3:
+            task.state = READY
+            task.retry = True
+            self.ready.append(task)
+            self._drain()
 
     def _fail_node(self, node: SNode):
         if not node.alive:
@@ -413,7 +462,7 @@ class LiveOrchestrator(Simulator):
     async def run(self, minutes: float, drain_s: float = 120.0):
         # keep connections to the workers open between tasks: a new TCP handshake costs one more round trip
         self.http = ClientSession(timeout=ClientTimeout(total=180), headers={"X-Token": self.token},
-                                  connector=TCPConnector(keepalive_timeout=120))
+                                  connector=TCPConnector(limit=0, keepalive_timeout=120))
         loop = asyncio.get_running_loop()
         self.t0 = time.monotonic()
         self.carbon.clock = lambda: self.now
@@ -430,6 +479,7 @@ class LiveOrchestrator(Simulator):
             await asyncio.sleep(1.0)
         hb.cancel()
         sp.cancel()
+        self.closing = True
         await self.http.close()
         return self.summary()
 

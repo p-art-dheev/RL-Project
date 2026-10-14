@@ -1,6 +1,6 @@
 # PACE runbook: laptop setup, AWS testbed, experiments, live demo
 
-Commands are for **Windows 11 PowerShell** on the HP Victus. Linux and macOS are the same except for `.venv\Scripts\Activate.ps1`.
+Commands are for **Windows 11 PowerShell** on the HP Victus. Linux and macOS are the same except for `rl-project-venv\Scripts\Activate.ps1`.
 Budget: the whole plan uses **< $10** of the $100 Free-plan credit.
 
 ---
@@ -12,8 +12,8 @@ Budget: the whole plan uses **< $10** of the $100 Free-plan credit.
    ```powershell
    git clone https://github.com/p-art-dheev/RL-Project.git
    cd RL-Project
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1          # if blocked: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   python -m venv rl-project-venv
+   .\rl-project-venv\Scripts\Activate.ps1          # if blocked: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
    pip install -r requirements.txt
    ```
    The policy is about 60K parameters, so the CPU build of PyTorch is enough. The RTX 3050 is optional.
@@ -64,7 +64,7 @@ python -m testbed.aws status        # every node must say OK
 ```
 In a **second terminal** (keep it open), start the two edge workers that emulate camera boxes:
 ```powershell
-.\.venv\Scripts\Activate.ps1
+.\rl-project-venv\Scripts\Activate.ps1
 python -m testbed.local --edges 2   # allow the Windows firewall prompt for private networks
 ```
 Back in the first terminal, measure the real system (CPU speed per node, RTT and bandwidth Coimbatore↔Mumbai↔Stockholm):
@@ -105,7 +105,7 @@ Interrupted? Run the same command again: finished runs are skipped.
 
 ## 5. Live demo for the professor (≈10 min)
 
-Open 3 terminals, each with `.\.venv\Scripts\Activate.ps1`:
+Open 3 terminals, each with `Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned` and `.\rl-project-venv\Scripts\Activate.ps1`:
 
 ```powershell
 # T1: edge workers (camera boxes)

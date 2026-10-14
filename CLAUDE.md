@@ -25,11 +25,14 @@ safety shield, SLA-target controller). Base paper to beat: MERSEM (arXiv:2605.13
   sim-to-real; report, figure and deck updated. Live runs use `models/pace_live.pt` (fine-tuned in the calibrated twin).
 - Headline (real AWS, E8b): PACE missed fewer deadlines than MERSEM in all 6 paired runs (-6.6 pp, p = 0.031) at +15%
   carbon (not significant); same deadline performance as CA-EFT with 15% less carbon (p = 0.031).
-- Testbed: 4 EC2 instances were left running (pace-bom-x86/arm in ap-south-1, pace-arn-x86/arm in eu-north-1), deployed
-  with the current worker code and calibrated. `testbed/nodes.json` (gitignored, holds the access token) is on the laptop.
-- Remaining: rehearse the live demo (RUNBOOK section 5; `walk.mp4` in the repo root is the backup camera video,
-  `python -m testbed.camera --source walk.mp4 --camera edge0 --fps 2`); fill the deck cover placeholders
-  ([Your name], [Course], [Professor]); `python -m testbed.aws stop` at the end of each day, `aws down` after presenting.
+- Testbed: 4 EC2 instances (pace-bom-x86/arm in ap-south-1, pace-arn-x86/arm in eu-north-1) are STOPPED since the
+  rehearsal; deployed with the current worker code and calibrated. `testbed/nodes.json` (gitignored, holds the access
+  token) is on the laptop. Before presenting: `aws start`, `allow --wide`, edge workers, `python -m testbed.calibrate`.
+- Demo rehearsed on 2026-10-14 with `walk.mp4` (all five dashboard steps). Two fixes came out of it in the orchestrator:
+  the crash button now holds the node out for the full 60 s (the EC2 worker restarts under systemd in ~2 s and forgot
+  the outage), and a new SLA target resets the controller's integral (before, w stayed flat after 0.05 -> 0.01).
+- Deck cover filled in (team of four, 22AIE401 Reinforcement Learning, guide Dr. Palmani Duraisamy).
+- Remaining: `python -m testbed.aws stop` at the end of each day, `aws down` after presenting.
 
 ## Testbed gotchas (learned the hard way)
 - Cloudflare WARP (1.1.1.1 app) must be off: AWS then sees 104.28.x.x and blocks the laptop.

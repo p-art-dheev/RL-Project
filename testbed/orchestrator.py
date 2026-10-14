@@ -143,6 +143,7 @@ class LiveOrchestrator(Simulator):
         self.cur = None
         self.cur_ctx = None
         self.hb_fail = {n.idx: 0 for n in self.nodes}
+        self.hold_until = {n.idx: 0.0 for n in self.nodes}  # injected crash: keep the node out until then
         self.attempts: dict[int, int] = {}
         self.closing = False
         self.decide_wall = 0.0
@@ -401,7 +402,7 @@ class LiveOrchestrator(Simulator):
                     ok = False
                 if ok:
                     self.hb_fail[n.idx] = 0
-                    if not n.alive:
+                    if not n.alive and self.now >= self.hold_until[n.idx]:
                         n.alive = True
                         n.down_total += self.now - n.down_since
                         self.events.append(dict(t=round(self.now, 2), ev="node-up", node=n.spec.name))
@@ -527,12 +528,16 @@ def web_app(orch: LiveOrchestrator) -> web.Application:
             return web.json_response({"ok": False, "status": status, "error": text})
         orch.events.append(dict(t=round(orch.now, 2), ev="inject-crash", node=n.spec.name, secs=secs))
         orch._fail_node(n)  # we know it is down; the heartbeat brings it back when the worker answers again
+        # an EC2 worker can restart under systemd within ~2 s and forget its outage: hold the node out for secs
+        orch.hold_until[n.idx] = orch.now + secs
         return web.json_response({"ok": True})
 
     async def target(r):
         v = r.query.get("value")
         if hasattr(orch.sched, "target"):
             orch.sched.target = None if v in (None, "", "none") else float(v)
+            if hasattr(orch.sched, "integral"):  # reset the integral on a new target (anti-windup), so w reacts now
+                orch.sched.integral = 0.0
         orch.events.append(dict(t=round(orch.now, 2), ev="sla-target", value=v))
         return web.json_response({"ok": True})
 

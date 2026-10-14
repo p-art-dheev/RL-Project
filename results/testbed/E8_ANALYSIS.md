@@ -55,8 +55,9 @@ day differ, so E8 and E8b are compared within each run set (interleaved), not ac
 
 ## E8b — the same experiment with the online network estimate (results/testbed/adaptive/)
 
-Run 2026-10-13 night, same settings, interleaved, 3 seeds. EFT's runs were hit by an orchestrator bug and are
-excluded (see `invalid/README.md`); the four runs below had no failures and no unfinished jobs.
+Run 2026-10-13 night, same settings, interleaved, 3 seeds. EFT's first runs were hit by an orchestrator bug
+(see `invalid/README.md`) and were re-run on 2026-10-14 after the fix, together with the busy-hour set.
+The full tables, paired statistics and figure are in `../REAL_TESTBED.md`.
 
 | Scheduler | Alerts missed | Analytics missed | A+B missed | Carbon dyn (g) | p95 alert (s) |
 |---|---|---|---|---|---|

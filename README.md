@@ -6,7 +6,7 @@ PACE (Preference-conditioned, Adaptive, Carbon-aware Edge scheduler) places ever
 - **RL lineage:** DeepRM (HotNets 2016) for online RL scheduling, and DeepRM2 (2018) for the behaviour-cloning warm start.
 - **Design, paper critique, novelty:** [`docs/PROPOSAL.md`](docs/PROPOSAL.md)
 - **How to run everything (laptop, AWS, demo):** [`docs/RUNBOOK.md`](docs/RUNBOOK.md)
-- **Results:** [`results/RESULTS.md`](results/RESULTS.md) (simulation) and `results/testbed/` (real AWS)
+- **Results:** [`results/RESULTS.md`](results/RESULTS.md) (simulation) and [`results/REAL_TESTBED.md`](results/REAL_TESTBED.md) (real AWS)
 
 ## Headline results (simulation, held-out jobs, 10 paired seeds, testbed topology)
 
@@ -21,7 +21,22 @@ PACE (Preference-conditioned, Adaptive, Carbon-aware Edge scheduler) places ever
 - **PACE + shield vs CA-EFT:** better on alerts, equal on analytics (within the CI), −26% carbon (p = 0.002). Pure PACE misses more large analytics jobs; see `results/RESULTS.md` for the per-class discussion.
 - Under rush hours, node crashes, random failures, 2× load and ±40% runtime-estimate noise, a PACE variant has the fewest violations in every scenario. PACE + shield beats both CA-EFT and MERSEM in each one, with less carbon than CA-EFT.
 - Carbon intensities are **synthetic** hourly profiles until the Electricity Maps CSVs are added.
-- Real-AWS results (E8) and the sim-to-real check (E9) are produced by `docs/RUNBOOK.md` §4.
+
+## Headline results (real AWS testbed: laptop edge in Coimbatore, EC2 Mumbai + Stockholm)
+
+With the online network estimate (E8b), 6-minute runs, schedulers interleaved per seed, 3 seeds per load:
+
+| Method | Missed (nominal load) | Missed (busy hour) | Dynamic gCO₂ nominal / busy |
+|---|---|---|---|
+| MERSEM-Balanced (base paper) | 9.4% | 14.3% | 0.037 / 0.063 |
+| CA-EFT | 3.7% | 6.2% | 0.051 / 0.083 |
+| EFT | 14.4% | – | 0.282 / – |
+| **PACE, w = 0.9** | **3.8%** | 6.6% | 0.044 / 0.067 |
+| **PACE + shield, w = 0.9** | 6.1% | **4.6%** (0 alerts missed) | 0.050 / 0.069 |
+
+- **PACE vs MERSEM:** fewer missed deadlines in all 6 paired runs (−6.6 pp, Wilcoxon p = 0.031), for +15% carbon on average (not significant).
+- **PACE vs CA-EFT:** the same deadline performance with 15% less carbon (p = 0.031).
+- The testbed exposed three sim-to-real gaps, each fixed and documented: the dispatch model (tasks now overlap transfers and computation), SMT contention (2 x86 vCPUs = 1 core: 1.75× slower when both busy, measured by `calibrate`), and network drift to Mumbai over the evening (online latency estimate). PACE was fine-tuned in the calibrated digital twin (`models/pace_live.pt`). Details: `results/testbed/E8_ANALYSIS.md`, `results/testbed/TWIN_PREDICTION.md`.
 
 ## Layout
 ```
@@ -41,7 +56,8 @@ testbed/
   calibrate.py       measures node speeds and real RTT / bandwidth
   camera.py          webcam / phone / video frames -> class-A jobs
   local.py           edge workers on the laptop (or a fully local rehearsal)
-experiments/         run_sim.py (E1-E5), run_testbed.py (E8), sim2real.py (E9), plots.py
+experiments/         run_sim.py (E1-E5), run_testbed.py (E8), sim2real.py (E9), plots.py,
+                     twin_check.py (predict E8 in the calibrated twin), testbed_report.py (real-AWS report)
 ```
 
 ## Quick start

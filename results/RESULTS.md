@@ -1,5 +1,7 @@
 # PACE results (simulation)
 
+> Real AWS testbed results: `REAL_TESTBED.md`.
+
 > carbon: SYNTHETIC hourly profiles (replace with Electricity Maps data). All runs use the dataset's held-out test split; each seed is a different day/hour, workload and carbon trace shared by every method.
 
 > **How to read this.** "SLA A+B" weights every job equally, as MERSEM's SLA-violation rate does. Camera alerts (class A) are about 98% of jobs, so also read the per-class columns and the class-B-only fronts. **Dynamic carbon** is the part a scheduler controls and is the primary carbon metric. **Total carbon** adds idle power over each run's own length. Runs where batch work was deferred last longer, so their total includes more idle time; compare totals only with that in mind.

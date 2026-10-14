@@ -255,7 +255,7 @@ def fig_training(md):
 def main():
     PLOTS.mkdir(parents=True, exist_ok=True)
     rows = load()
-    md = ["# PACE results (simulation)\n", f"> {SYN}. All runs use the dataset's held-out test split; "
+    md = ["# PACE results (simulation)\n", "> Real AWS testbed results: `REAL_TESTBED.md`.\n", f"> {SYN}. All runs use the dataset's held-out test split; "
           "each seed is a different day/hour, workload and carbon trace shared by every method.\n"]
     for scen, tag in (("testbed nominal", "testbed"), ("city nominal", "city")):
         if any(r["exp"] == "E1" and r["scenario"] == scen for r in rows):

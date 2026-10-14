@@ -515,9 +515,18 @@ def web_app(orch: LiveOrchestrator) -> web.Application:
     async def fail(r):
         n = orch.by_name[r.query["node"]]
         secs = float(r.query.get("secs", "60"))
-        async with orch.http.post(f"{n.spec.url}/admin/crash?secs={secs}") as resp:
-            await resp.read()
+        try:
+            async with orch.http.post(f"{n.spec.url}/admin/crash?secs={secs}",
+                                      timeout=ClientTimeout(total=10)) as resp:
+                status, text = resp.status, (await resp.text())[:80]
+        except Exception as e:  # noqa: BLE001
+            status, text = None, str(e)[:80]
+        if status != 200:
+            orch.events.append(dict(t=round(orch.now, 2), ev="inject-crash-failed", node=n.spec.name,
+                                    value=f"{status}: {text}"))
+            return web.json_response({"ok": False, "status": status, "error": text})
         orch.events.append(dict(t=round(orch.now, 2), ev="inject-crash", node=n.spec.name, secs=secs))
+        orch._fail_node(n)  # we know it is down; the heartbeat brings it back when the worker answers again
         return web.json_response({"ok": True})
 
     async def target(r):

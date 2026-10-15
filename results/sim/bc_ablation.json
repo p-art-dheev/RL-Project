@@ -1,0 +1,182 @@
+[
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 0,
+  "sla_AB": 0.023274478330658106,
+  "sla_A": 0.022240527182866558,
+  "sla_B": 0.0625,
+  "carbon_dyn": 0.596112408268958
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 1,
+  "sla_AB": 0.020365168539325844,
+  "sla_A": 0.01929949964260186,
+  "sla_B": 0.08,
+  "carbon_dyn": 0.6519374904876649
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 2,
+  "sla_AB": 0.04351648351648352,
+  "sla_A": 0.04359550561797753,
+  "sla_B": 0.04,
+  "carbon_dyn": 0.9000078249365272
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 3,
+  "sla_AB": 0.030352748154224774,
+  "sla_A": 0.03053115851108323,
+  "sla_B": 0.02127659574468085,
+  "carbon_dyn": 1.048523186847589
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 4,
+  "sla_AB": 0.009158557527189467,
+  "sla_A": 0.009329446064139942,
+  "sla_B": 0.0,
+  "carbon_dyn": 0.6560615799599351
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 5,
+  "sla_AB": 0.010970464135021098,
+  "sla_A": 0.010265183917878529,
+  "sla_B": 0.0625,
+  "carbon_dyn": 0.5031318354613433
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 6,
+  "sla_AB": 0.02072538860103627,
+  "sla_A": 0.01972386587771203,
+  "sla_B": 0.08695652173913043,
+  "carbon_dyn": 0.5990336196863006
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 7,
+  "sla_AB": 0.09144542772861357,
+  "sla_A": 0.08697514995715509,
+  "sla_B": 0.358974358974359,
+  "carbon_dyn": 1.2967404268598077
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 8,
+  "sla_AB": 0.016884761502743775,
+  "sla_A": 0.016295025728987993,
+  "sla_B": 0.05405405405405406,
+  "carbon_dyn": 0.9492390619284146
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.9)",
+  "seed": 9,
+  "sla_AB": 0.011271133375078271,
+  "sla_A": 0.011464968152866241,
+  "sla_B": 0.0,
+  "carbon_dyn": 0.6111851296245095
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 0,
+  "sla_AB": 0.019261637239165328,
+  "sla_A": 0.018121911037891267,
+  "sla_B": 0.0625,
+  "carbon_dyn": 0.6060390746105012
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 1,
+  "sla_AB": 0.014747191011235955,
+  "sla_A": 0.013581129378127233,
+  "sla_B": 0.08,
+  "carbon_dyn": 0.6607292923413479
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 2,
+  "sla_AB": 0.036923076923076927,
+  "sla_A": 0.037303370786516854,
+  "sla_B": 0.02,
+  "carbon_dyn": 0.9050043595000521
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 3,
+  "sla_AB": 0.03773584905660377,
+  "sla_A": 0.037222919280635716,
+  "sla_B": 0.06382978723404255,
+  "carbon_dyn": 1.064177138502824
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 4,
+  "sla_AB": 0.009730967372638809,
+  "sla_A": 0.009329446064139942,
+  "sla_B": 0.03125,
+  "carbon_dyn": 0.6423801149639004
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 5,
+  "sla_AB": 0.008438818565400843,
+  "sla_A": 0.00855431993156544,
+  "sla_B": 0.0,
+  "carbon_dyn": 0.5003670848722074
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 6,
+  "sla_AB": 0.019430051813471502,
+  "sla_A": 0.0190664036817883,
+  "sla_B": 0.043478260869565216,
+  "carbon_dyn": 0.599960714479166
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 7,
+  "sla_AB": 0.09270965023177413,
+  "sla_A": 0.08783204798628963,
+  "sla_B": 0.38461538461538464,
+  "carbon_dyn": 1.3045403733848826
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 8,
+  "sla_AB": 0.025749261291684256,
+  "sla_A": 0.02530017152658662,
+  "sla_B": 0.05405405405405406,
+  "carbon_dyn": 0.9474735113306391
+ },
+ {
+  "model": "models/pace_bc.pt",
+  "method": "PACE(w=0.0)",
+  "seed": 9,
+  "sla_AB": 0.012523481527864746,
+  "sla_A": 0.012738853503184714,
+  "sla_B": 0.0,
+  "carbon_dyn": 0.6038821616511532
+ }
+]

@@ -142,7 +142,7 @@ def fig_e6():
 def fig_real():
     # E8b run files (online network estimate), A+B missed %, mean over 3 seeds per load
     from experiments.testbed_report import ROOT, load, row
-    keys = ["mersem", "eft", "ca-eft", "pace", "pace-shield"]
+    keys = ["mersem", "ca-eft", "pace", "pace-shield"]  # EFT was not run in the busy hour: left out
     sched = keys
     nom, bus = load(ROOT / "adaptive"), load(ROOT / "adaptive_busy")
     nominal = [row(nom[k])["AB"] for k in keys]
@@ -156,8 +156,7 @@ def fig_real():
         ax.text(xx - 0.19, a + 0.3, f"{a:.1f}", ha="center", fontsize=6)
         if not np.isnan(b):
             ax.text(xx + 0.19, b + 0.3, f"{b:.1f}", ha="center", fontsize=6)
-    ax.text(1.19, 0.6, "not\nrun", ha="center", fontsize=6)
-    ax.set_xticks(x, ["MERSEM", "EFT", "CA-EFT", "PACE", "PACE\n+shield"])
+    ax.set_xticks(x, ["MERSEM", "CA-EFT", "PACE", "PACE\n+shield"])
     ax.set_ylabel("deadlines missed (%)")
     ax.legend()
     ax.grid(axis="x", alpha=0)

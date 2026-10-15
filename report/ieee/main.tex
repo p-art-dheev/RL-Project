@@ -22,25 +22,26 @@
   arr/.style={-{Stealth[length=2mm]},semithick},
 }
 
-% ------------------------------------------------------------------ edit if needed
-\newcommand{\affil}{\textit{Dept. of [Department], [Institution]}\\Coimbatore, India}
-% ----------------------------------------------------------------------------------
+\newcommand{\affil}{\textit{School of Artificial Intelligence}\\\textit{Amrita Vishwa Vidyapeetham}\\Coimbatore, India}
 
 \begin{document}
 
 \title{PACE: Carbon- and SLA-Aware Edge--Cloud Task Scheduling with Preference-Conditioned Deep Reinforcement Learning}
 
 \author{\IEEEauthorblockN{Nandu Manoj}
-\IEEEauthorblockA{\affil \\ CB.SC.U4AIE23321}
+\IEEEauthorblockA{\affil \\ cb.sc.u4aie23321@cb.students.amrita.edu}
 \and
 \IEEEauthorblockN{Naren Sundar L}
-\IEEEauthorblockA{\affil \\ CB.SC.U4AIE23322}
+\IEEEauthorblockA{\affil \\ cb.sc.u4aie23322@cb.students.amrita.edu}
 \and
 \IEEEauthorblockN{Vatturu Pardheev}
-\IEEEauthorblockA{\affil \\ CB.SC.U4AIE23344}
+\IEEEauthorblockA{\affil \\ cb.sc.u4aie23344@cb.students.amrita.edu}
 \and
 \IEEEauthorblockN{Charuvarthan T}
-\IEEEauthorblockA{\affil \\ CB.SC.U4AIE23359}
+\IEEEauthorblockA{\affil \\ cb.sc.u4aie23359@cb.students.amrita.edu}
+\and
+\IEEEauthorblockN{Dr.\ Palmani Duraisamy}
+\IEEEauthorblockA{\affil \\ d\_palmani@cb.amrita.edu}
 }
 
 \maketitle
@@ -370,9 +371,6 @@ Threats to validity: carbon intensities are synthetic profiles from real annual 
 % ==================================================================== VIII
 \section{Conclusion}
 We cast edge--cloud task placement as an SMDP and trained a preference-conditioned PPO agent, PACE, with a deadline-decomposition reward, behaviour-cloning warm start and domain randomisation. One network covers the whole deadline--carbon trade-off and is steered at run time to an SLA target. PACE beats the base paper by an order of magnitude in missed deadlines in simulation with less carbon, generalises to most unseen setups, and on a real three-region testbed missed fewer deadlines than MERSEM in every paired run while matching the best heuristic with 15\% less carbon. Code and data: \url{https://github.com/p-art-dheev/RL-Project}.
-
-\section*{Acknowledgment}
-We thank our guide, Dr.\ Palmani Duraisamy, for guidance throughout this project.
 
 % ==================================================================== references
 \begin{thebibliography}{00}

@@ -11,58 +11,61 @@
   body { font-family: "Segoe UI", Calibri, Arial, sans-serif; color: var(--ink); font-size: 10.4pt; line-height: 1.42; margin: 0; }
   .page { page-break-after: always; }
   .page:last-child { page-break-after: auto; }
-  h1 { font-size: 21pt; margin: 0 0 2px; color: var(--blue); letter-spacing: -0.3px; }
-  h2 { font-size: 14pt; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--blue); color: var(--ink); }
-  h3 { font-size: 11pt; margin: 12px 0 4px; color: var(--blue); }
+  h1 { font-size: 21pt; margin: 0 0 2px; letter-spacing: -0.3px; }
+  h2 { font-size: 14pt; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--blue); }
+  h2 .step { display: inline-block; background: var(--blue); color: #fff; border-radius: 4px; padding: 0 7px; margin-right: 6px; font-size: 11pt; }
+  h3 { font-size: 11pt; margin: 11px 0 4px; color: var(--blue); }
   p { margin: 4px 0 6px; }
-  ul { margin: 3px 0 6px 0; padding-left: 18px; }
+  ul, ol { margin: 3px 0 6px 0; padding-left: 18px; }
   li { margin: 2px 0; }
-  .sub { color: var(--muted); font-size: 10pt; margin-bottom: 10px; }
-  .pn { float: right; color: var(--muted); font-size: 9pt; font-weight: normal; }
-  .box { border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; margin: 7px 0; background: #fff; }
+  .sub { color: var(--muted); font-size: 10pt; }
+  .box { border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; margin: 7px 0; background: #fff; break-inside: avoid; }
   .key { background: var(--blue-l); border-color: #bcd2ee; }
   .good { background: var(--green-l); border-color: #bfe0c7; }
   .bad { background: var(--red-l); border-color: #efc6c2; }
   .tip { background: var(--amber-l); border-color: #f1d999; }
   .lbl { font-weight: 700; font-size: 9.2pt; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 2px; }
   .key .lbl { color: var(--blue); } .good .lbl { color: var(--green); } .bad .lbl { color: var(--red); } .tip .lbl { color: var(--amber); }
-  table { border-collapse: collapse; width: 100%; font-size: 9.6pt; margin: 6px 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin: 6px 0; break-inside: avoid; }
   th, td { border: 1px solid var(--line); padding: 4px 7px; vertical-align: top; text-align: left; }
   th { background: var(--grey-l); font-weight: 600; }
   td.num, th.num { text-align: right; white-space: nowrap; }
-  tr.us td { background: var(--blue-l); font-weight: 600; }
   .two { display: flex; gap: 10px; } .two > * { flex: 1; }
-  /* flow diagrams */
-  .flow { display: flex; align-items: stretch; gap: 0; margin: 8px 0; }
+  .flow { display: flex; align-items: stretch; margin: 8px 0; break-inside: avoid; }
   .flow .st { flex: 1; border: 1.5px solid var(--blue); border-radius: 6px; padding: 5px 6px; text-align: center; font-size: 9pt; background: var(--blue-l); }
   .flow .st b { display: block; font-size: 9.6pt; margin-bottom: 1px; }
   .flow .ar { align-self: center; padding: 0 3px; color: var(--blue); font-size: 15pt; font-weight: 700; }
   .flow.green .st { border-color: var(--green); background: var(--green-l); } .flow.green .ar { color: var(--green); }
-  .vflow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 6px 0; }
-  .vflow .st { width: 82%; border: 1.5px solid var(--blue); border-radius: 6px; padding: 4px 8px; text-align: center; font-size: 9.4pt; background: var(--blue-l); }
-  .vflow .ar { color: var(--blue); font-size: 13pt; line-height: 1; padding: 1px 0; }
-  .num-badge { display: inline-block; width: 17px; height: 17px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 8.5pt;
-               text-align: center; line-height: 17px; font-weight: 700; margin-right: 4px; }
-  /* formulas */
+  .vflow { display: flex; flex-direction: column; align-items: center; margin: 6px 0; break-inside: avoid; }
+  .vflow .st { width: 86%; border: 1.5px solid var(--blue); border-radius: 6px; padding: 4px 8px; text-align: center; font-size: 9.4pt; background: var(--blue-l); }
+  .vflow .ar { color: var(--blue); font-size: 12pt; line-height: 1.1; }
+  .vflow .ar span { font-size: 8.5pt; color: var(--muted); }
+  .loopback { font-size: 9pt; color: var(--blue); text-align: center; font-weight: 600; margin-top: 2px; }
+  .nb { display: inline-block; width: 17px; height: 17px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 8.5pt;
+        text-align: center; line-height: 17px; font-weight: 700; margin-right: 4px; }
   .f { border-left: 4px solid var(--blue); background: #f7f9fc; padding: 6px 10px; margin: 6px 0; break-inside: avoid; }
   .f .eq { font-family: "Cambria Math", Cambria, "Times New Roman", serif; font-size: 12pt; margin: 2px 0 3px; }
   .f .t { font-weight: 700; font-size: 9.6pt; color: var(--blue); }
   .f .ex { font-size: 9.6pt; color: #333; }
-  i.v { font-family: "Cambria Math", Cambria, serif; }
-  /* tiers diagram */
   .tiers { display: flex; gap: 8px; margin: 6px 0; }
   .tier { flex: 1; border-radius: 6px; padding: 6px 8px; font-size: 9.2pt; text-align: center; border: 1.5px solid; }
   .tier b { display: block; font-size: 10pt; }
   .t1 { border-color: #3d8b4f; background: #eef7f0; } .t2 { border-color: #c9772b; background: #fdf1e6; } .t3 { border-color: #2a6fb5; background: #eaf2fb; }
   .small { font-size: 9pt; color: var(--muted); }
+  .fig { text-align: center; margin: 6px 0; break-inside: avoid; }
+  .fig img { max-width: 100%; }
+  .fig .cap { font-size: 9pt; color: var(--muted); margin-top: 2px; }
   .qa p { margin: 3px 0; } .qa b { color: var(--blue); }
   .cover { border-radius: 8px; background: linear-gradient(135deg, #14213d, #1f5fa8); color: #fff; padding: 14px 16px; margin-bottom: 10px; }
-  .cover h1 { color: #fff; } .cover .sub { color: #d6e2f3; margin: 0; }
+  .cover h1 { color: #fff; } .cover .sub { color: #d6e2f3; margin: 2px 0 0; }
+  .toc { columns: 2; font-size: 9.8pt; margin: 4px 0; } .toc div { margin: 1px 0; }
+  .why { font-size: 9.6pt; }
+  .why td:first-child { width: 28%; font-weight: 600; }
 </style>
 </head>
 <body>
 
-<!-- ============================================================ PAGE 1 -->
+<!-- ============================================================ PAGE 1: overview -->
 <div class="page">
   <div class="cover">
     <h1>PACE: Viva Guide</h1>
@@ -71,292 +74,420 @@
   </div>
 
   <div class="box key"><span class="lbl">The project in 30 seconds</span>
-  Every job (for example, a camera alert) is a small graph of tasks. For each task, we have to choose <b>where</b> to run it: on the
-  camera box itself (edge), on a nearby server in Mumbai (fog), or on a far server in Stockholm (cloud). Mumbai is close but runs on
-  <b>dirty</b> coal power; Stockholm is far but runs on <b>clean</b> power. So every choice trades <b>meeting the deadline</b> against
-  <b>carbon emitted</b>. We trained an RL agent, <b>PACE</b>, that makes this choice for every task in about 1 ms. It beat the base paper
-  (MERSEM) in simulation and on real AWS machines.</div>
+  Every job (for example a camera alert) is a small graph of tasks. For each task an <b>RL agent</b> chooses <b>where</b> to run it:
+  on the camera box (edge), on a near server in Mumbai (fog, <b>dirty</b> coal power) or on a far server in Stockholm (cloud, <b>clean</b> power).
+  Each choice trades <b>meeting the deadline</b> against <b>carbon</b>. Our agent, <b>PACE</b>, learns this trade-off by trial and error in a
+  simulator (PPO), then runs on real AWS machines, deciding in about 1 ms per task. It beats the base paper, MERSEM.</div>
 
-  <h3>The setting (what the agent controls)</h3>
+  <h3>The setting</h3>
   <div class="tiers">
-    <div class="tier t1"><b>Edge · Coimbatore</b>camera boxes (our laptop)<br>slow (1 core) · no network delay<br>grid ≈ 560 gCO₂/kWh</div>
-    <div class="tier t2"><b>Fog · AWS Mumbai</b>2 servers (x86 + ARM)<br>near (~30–110 ms)<br>grid ≈ 680 gCO₂/kWh <b>(dirty)</b></div>
-    <div class="tier t3"><b>Cloud · AWS Stockholm</b>2 servers (x86 + ARM)<br>far (~150–400 ms)<br>grid ≈ 35 gCO₂/kWh <b>(clean)</b></div>
+    <div class="tier t1"><b>Edge · Coimbatore</b>camera boxes (our laptop)<br>slow (1 core), no network delay<br>grid ≈ 560 gCO₂/kWh</div>
+    <div class="tier t2"><b>Fog · AWS Mumbai</b>2 servers (x86 + ARM)<br>near: ~30–110 ms<br>grid ≈ 680 gCO₂/kWh <b>(dirty)</b></div>
+    <div class="tier t3"><b>Cloud · AWS Stockholm</b>2 servers (x86 + ARM)<br>far: ~150–400 ms<br>grid ≈ 35 gCO₂/kWh <b>(clean)</b></div>
   </div>
-
-  <h3>Three kinds of jobs</h3>
   <table>
-    <tr><th>Class</th><th>Example</th><th>Deadline</th><th>Notes</th></tr>
-    <tr><td><b>A · Alert</b></td><td>camera frame → detect pedestrian → alert</td><td>1 second</td><td>≈ 98% of all jobs; 30% of cameras are private (must stay in India)</td></tr>
+    <tr><th>Job class</th><th>Example</th><th>Deadline</th><th>Notes</th></tr>
+    <tr><td><b>A · Alert</b></td><td>camera frame → detect pedestrian → alert</td><td>1 second</td><td>≈ 98% of jobs; 30% of cameras are private (stay in India)</td></tr>
     <tr><td><b>B · Analytics</b></td><td>graph job from the dataset (many tasks)</td><td>seconds</td><td>big DAGs, hardest to finish in time</td></tr>
     <tr><td><b>C · Batch</b></td><td>graph job from the dataset</td><td>30–120 min</td><td>can be <b>deferred</b> to a greener hour</td></tr>
   </table>
 
   <h3>Words you will hear</h3>
   <table>
-    <tr><td style="width:24%"><b>SLA / deadline miss</b></td><td>A job finished after its deadline. Our main metric: % of class A+B jobs that missed.</td></tr>
-    <tr><td><b>DAG</b></td><td>Directed acyclic graph: a job made of tasks, where a task can start only after its parent tasks finish.</td></tr>
-    <tr><td><b>Dynamic carbon</b></td><td>The CO₂ caused by running our tasks (the part a scheduler controls), in grams.</td></tr>
-    <tr><td><b>w (preference)</b></td><td>A number from 0 to 1. <b>w = 1</b>: care only about deadlines. <b>w = 0</b>: care only about carbon. It is an <i>input</i> to our policy.</td></tr>
-    <tr><td><b>EFT / CA-EFT</b></td><td>Simple rules. EFT = "run where it finishes earliest". CA-EFT = "run on the greenest node that still meets the deadline". CA-EFT is our strongest simple baseline.</td></tr>
-    <tr><td><b>Digital twin</b></td><td>Our simulator, tuned with measurements from the real AWS machines, so it behaves like the real testbed.</td></tr>
+    <tr><td style="width:23%"><b>SLA / deadline miss</b></td><td>A job finished after its deadline. Main metric: % of class A+B jobs that missed.</td></tr>
+    <tr><td><b>DAG</b></td><td>A job made of tasks; a task starts only after its parent tasks finish.</td></tr>
+    <tr><td><b>Dynamic carbon</b></td><td>CO₂ caused by running our tasks (the part a scheduler controls), in grams.</td></tr>
+    <tr><td><b>w (preference)</b></td><td>0 to 1. <b>w = 1</b>: only deadlines matter. <b>w = 0</b>: only carbon matters. It is an <i>input</i> to the policy.</td></tr>
+    <tr><td><b>EFT / CA-EFT</b></td><td>Simple rules. EFT: run where it finishes earliest. CA-EFT: greenest node that still meets the deadline (our strongest simple baseline, and the agent's first teacher).</td></tr>
+    <tr><td><b>Episode</b></td><td>One simulated stretch of time (20 min of job arrivals, then the remaining work drains). The agent makes thousands of decisions per episode.</td></tr>
   </table>
+
+  <h3>How this guide is organised (follow the steps in order)</h3>
+  <div class="toc">
+    <div>p.2 · Existing work vs our work</div>
+    <div>Step 1 · The environment (what the agent lives in)</div>
+    <div>Step 2 · Turning it into an RL problem</div>
+    <div>Step 3 · The agent and the key formulas</div>
+    <div>Step 4 · How the agent learns over time</div>
+    <div>Step 5 · How we improved the algorithm</div>
+    <div>Step 6 · From simulation to real machines</div>
+    <div>Step 7 · Results and why · Q&amp;A</div>
+  </div>
 </div>
 
-<!-- ============================================================ PAGE 2 -->
+<!-- ============================================================ PAGE 2: existing vs ours -->
 <div class="page">
-  <h2>1. Existing work vs our work <span class="pn">page 2</span></h2>
+  <h2>Existing work vs our work</h2>
 
   <h3>The base paper: MERSEM (Ramicetty et al., arXiv 2026)</h3>
-  <p><b>Problem they solve:</b> the same one as ours: schedule graph-analytics jobs on edge, fog and cloud so that few jobs miss deadlines and little carbon is emitted.</p>
-  <p><b>What they do, intuitively:</b> every <b>15 minutes</b>, they <b>predict</b> which jobs will arrive in the next 15 minutes, then run an
-  <b>evolutionary (genetic) algorithm</b> that searches for a good "job → machine" plan. The RL part is small: a <b>tabular Q-learning</b> agent only decides
-  <i>how strongly to mutate</i> the plans during the search (5 choices). Their objective is a fixed weighted sum:
-  <span style="font-family:Cambria,serif"><i>score = w<sub>s</sub>·(SLA miss rate) + w<sub>c</sub>·(carbon)</i></span>, with <i>w<sub>s</sub> + w<sub>c</sub> = 1</i>.</p>
-  <p><b>Dataset they use:</b> the <b>Rezaee &amp; Adabi DAG workflow dataset</b> (Zenodo, CC-BY-4.0). We inspected it: <b>51,895 jobs</b> and <b>1.3 million tasks</b>,
-  typically 7–62 tasks per job, with task sizes, dependencies and job deadlines. <b>We use the same dataset</b> (first 70% of the timeline for training, last 30% for testing).</p>
-  <p><b>How they evaluate:</b> simulation only (an extended EdgeCloudSim), against other metaheuristics (PSO-GA, GWO, ...).</p>
+  <p><b>Problem:</b> the same as ours: schedule graph-analytics jobs on edge, fog and cloud so that few jobs miss deadlines and little carbon is emitted.</p>
+  <p><b>What they do, intuitively:</b> every <b>15 minutes</b> they <b>predict</b> the next 15 minutes of jobs, then run an <b>evolutionary (genetic) algorithm</b>
+  that searches for a good "job → machine" plan. The RL part is small: a <b>tabular Q-learning</b> agent only chooses <i>how strongly to mutate</i> plans during
+  the search (5 choices). Objective: a fixed weighted sum, <i>score = w<sub>s</sub>·(miss rate) + w<sub>c</sub>·(carbon)</i>, with <i>w<sub>s</sub> + w<sub>c</sub> = 1</i>.</p>
+  <p><b>Dataset:</b> the <b>Rezaee &amp; Adabi DAG workflow dataset</b> (Zenodo, CC-BY-4.0): <b>51,895 jobs</b>, <b>1.3 million tasks</b>, typically 7–62 tasks per job,
+  with task sizes, dependencies and deadlines. <b>We use the same dataset</b>: the first 70% of its timeline for training, the last 30% for all tests.</p>
+  <p><b>Evaluation:</b> simulation only (extended EdgeCloudSim), against other metaheuristics (PSO-GA, GWO, ...).</p>
 
-  <h3>Side by side</h3>
   <table>
-    <tr><th style="width:22%"></th><th style="width:39%">MERSEM (base paper)</th><th>PACE (ours)</th></tr>
-    <tr><td><b>When it decides</b></td><td>Once per 15-min epoch, offline, from a prediction</td><td><b>Online</b>: the moment each task is ready (≈ 1 ms)</td></tr>
-    <tr><td><b>What it places</b></td><td>A whole job on one machine</td><td><b>Each task</b> separately (a job can span edge + cloud)</td></tr>
-    <tr><td><b>Role of RL</b></td><td>Q-learning tunes the mutation strength of a genetic search</td><td><b>The RL agent is the scheduler</b> (deep RL, PPO)</td></tr>
+    <tr><th style="width:21%"></th><th style="width:38%">MERSEM (base paper)</th><th>PACE (ours)</th></tr>
+    <tr><td><b>When it decides</b></td><td>Once per 15-min epoch, from a prediction</td><td><b>Online</b>: the moment each task is ready (≈ 1 ms)</td></tr>
+    <tr><td><b>What it places</b></td><td>A whole job on one machine</td><td><b>Each task</b> separately (a job can span edge and cloud)</td></tr>
+    <tr><td><b>Role of RL</b></td><td>Q-learning tunes the genetic search</td><td><b>The RL agent is the scheduler</b> (deep RL, PPO)</td></tr>
     <tr><td><b>Deadline vs carbon</b></td><td>Fixed weight; re-run the search to change it</td><td><b>One policy for every w</b>; a controller changes w live</td></tr>
-    <tr><td><b>Knowledge assumed</b></td><td>Exact task runtimes</td><td>Only <b>noisy estimates</b> (like reality)</td></tr>
+    <tr><td><b>Knowledge assumed</b></td><td>Exact task runtimes</td><td>Only <b>noisy estimates</b>, as in reality</td></tr>
     <tr><td><b>Failures, priorities</b></td><td>Not modelled</td><td>Crashed nodes masked, tasks re-placed; alert &gt; analytics &gt; batch</td></tr>
-    <tr><td><b>Safety</b></td><td>None</td><td>Safety shield + privacy rules</td></tr>
-    <tr><td><b>Baselines</b></td><td>Other metaheuristics only</td><td>EFT, CA-EFT (strong simple rule), and <b>MERSEM itself</b></td></tr>
-    <tr><td><b>Evaluation</b></td><td>Simulation only</td><td>Simulation <b>+ real AWS testbed</b> (Coimbatore, Mumbai, Stockholm)</td></tr>
+    <tr><td><b>Safety</b></td><td>None</td><td>Safety shield and privacy rules</td></tr>
+    <tr><td><b>Baselines</b></td><td>Other metaheuristics only</td><td>EFT, CA-EFT and <b>MERSEM itself</b> (re-implemented)</td></tr>
+    <tr><td><b>Evaluation</b></td><td>Simulation only</td><td>Simulation <b>and a real AWS testbed</b></td></tr>
   </table>
 
-  <h3>What we took from others vs what we built</h3>
   <div class="two">
-    <div class="box"><span class="lbl" style="color:var(--muted)">Taken (cite these)</span>
+    <div class="box"><span class="lbl" style="color:var(--muted)">Taken from others (cite these)</span>
       <ul style="margin:0">
         <li>Problem, metrics, dataset: <b>MERSEM</b></li>
-        <li>Online RL scheduling, BC warm start: <b>DeepRM</b> (2016, 2018)</li>
+        <li>Online RL scheduling, warm start by imitation: <b>DeepRM</b> (2016, 2018)</li>
         <li>One shared network that scores each node: <b>Decima</b> (2019)</li>
         <li><b>PPO</b> (Schulman 2017); preference-conditioned RL (2019)</li>
-        <li>Controller on a weight: PID-Lagrangian safe RL (2020)</li>
+        <li>A controller on a weight: PID-Lagrangian safe RL (2020)</li>
       </ul></div>
     <div class="box key"><span class="lbl">Built by us</span>
       <ul style="margin:0">
-        <li><b>PACE</b> agent, and the <b>deadline-decomposition reward</b></li>
+        <li>The <b>PACE agent</b> and its <b>deadline-decomposition reward</b></li>
         <li>Job-pressure features, safety shield, SLA controller</li>
         <li>Our <b>re-implementation of MERSEM</b> (no public code)</li>
-        <li>Simulator + <b>real AWS testbed</b> + dashboard</li>
-        <li>Three <b>sim-to-real</b> fixes; all experiments E1–E9</li>
+        <li>The simulator, the <b>real AWS testbed</b> and dashboard</li>
+        <li>Three <b>sim-to-real</b> fixes; experiments E1–E9</li>
       </ul></div>
   </div>
 </div>
 
-<!-- ============================================================ PAGE 3 -->
+<!-- ============================================================ PAGE 3: Step 1 environment -->
 <div class="page">
-  <h2>2. Our approach: PACE as an RL problem <span class="pn">page 3</span></h2>
+  <h2><span class="step">Step 1</span>The environment: what the agent lives in</h2>
+  <p>In RL, the <b>environment</b> is everything outside the agent: it shows the agent a situation, accepts an action, moves forward in time and
+  later says how good the outcome was. Ours is a <b>discrete-event simulator</b> of the edge–fog–cloud system (during training), or the <b>real AWS testbed</b> (when deployed).
+  The agent cannot tell which one it is talking to: both use the same interface.</p>
 
-  <div class="box key"><span class="lbl">The RL loop in one picture</span>
-    <div class="vflow">
-      <div class="st"><b>Environment</b>: simulator during training · real AWS testbed when deployed</div>
-      <div class="ar">↓ <span class="small">a task becomes ready</span></div>
-      <div class="st"><b>State s</b>: facts about the task + facts about every candidate node</div>
-      <div class="ar">↓</div>
-      <div class="st" style="background:#fdf1e6;border-color:#c9772b"><b>Agent (policy network)</b>: gives a probability to each node, plus "defer"</div>
-      <div class="ar">↓</div>
-      <div class="st" style="background:var(--green-l);border-color:var(--green)"><b>Action a</b>: run the task on node <i>m</i> (or defer a batch task)</div>
-      <div class="ar">↓ <span class="small">task runs, job finishes later</span></div>
-      <div class="st"><b>Reward r</b>: minus (carbon used + penalty if late) → agent learns from it</div>
-    </div>
+  <h3>What the simulator models</h3>
+  <ul>
+    <li><b>Nodes</b> with a number of CPU slots, a speed, a location and a grid zone. Busy nodes slow down a bit (CPU contention).</li>
+    <li><b>Network</b>: moving data between places costs half a round trip plus size ÷ bandwidth.</li>
+    <li><b>Jobs</b> arrive over time (alerts from cameras, analytics and batch DAGs from the dataset), each with a deadline.</li>
+    <li><b>Uncertainty</b>: the agent only sees <i>estimated</i> task sizes (up to ±40% wrong); nodes can fail or slow down.</li>
+    <li><b>Carbon</b>: energy used × the hour's grid carbon intensity of that node's region.</li>
+  </ul>
+
+  <h3>One episode, step by step</h3>
+  <div class="vflow">
+    <div class="st"><b>1. Start:</b> build a random world (nodes, network, load) and pick a random preference w</div>
+    <div class="ar">↓</div>
+    <div class="st"><b>2. Time moves</b> until something happens: a job arrives, a task finishes, a node fails</div>
+    <div class="ar">↓ <span>a task's parents are all done → the task is "ready"</span></div>
+    <div class="st" style="background:#fdf1e6;border-color:#c9772b"><b>3. Decision point:</b> the agent sees the state and picks a node (or defer)</div>
+    <div class="ar">↓</div>
+    <div class="st"><b>4. Simulate:</b> send inputs over the network, wait for a slot, run, send output on</div>
+    <div class="ar">↓</div>
+    <div class="st"><b>5. When the job finishes:</b> we know if it was late and how much CO₂ it used → rewards for its decisions</div>
+    <div class="ar">↓</div>
+    <div class="st"><b>6. Repeat</b> for 20 simulated minutes of arrivals, then let the remaining work drain</div>
   </div>
+  <p class="small">Note the <b>delayed reward</b>: a placement's consequences are only known when its job finishes, maybe many decisions later. This is
+  exactly the credit-assignment problem RL is built for.</p>
+
+  <h3>Domain randomisation: a different world every episode</h3>
+  <p>If the agent always trained in one fixed world, it would memorise it. So each episode draws a new one:</p>
+  <table>
+    <tr><th>What changes</th><th>Range during training</th><th>Why</th></tr>
+    <tr><td>Number of nodes</td><td>2–6 edge, 1–3 fog, 1–3 cloud</td><td>work on any topology</td></tr>
+    <tr><td>Server speeds</td><td>±20%</td><td>machines differ</td></tr>
+    <tr><td>Network</td><td>delay ×0.7–1.5, bandwidth ×0.5–1.5</td><td>networks vary</td></tr>
+    <tr><td>Load</td><td>alerts 0.1–0.4 per camera per s; analytics scaled to server count</td><td>quiet and busy hours</td></tr>
+    <tr><td>Estimate noise</td><td>0–40%</td><td>real runtimes are never known exactly</td></tr>
+    <tr><td>Preference w</td><td>0 to 1</td><td>one policy for every trade-off</td></tr>
+  </table>
+  <p class="small">The ranges matter: in Step 7 the policy fails on a network much slower than anything in this table.</p>
+</div>
+
+<!-- ============================================================ PAGE 4: Step 2 MDP -->
+<div class="page">
+  <h2><span class="step">Step 2</span>Turning scheduling into an RL problem</h2>
+  <p>We describe the problem as a <b>(semi-)Markov decision process</b>: state, action, reward, and a transition (the environment of Step 1).
+  "Semi" because decisions do not happen every fixed second but whenever a task becomes ready.</p>
 
   <div class="two">
     <div>
-      <h3>State (what the agent sees)</h3>
+      <h3>State s: what the agent sees</h3>
       <ul>
-        <li><b>Task:</b> its class, size, how much time is left (budget), how much work remains after it, whether it is private, and the weight <b>w</b>.</li>
-        <li><b>Each node:</b> tier, speed, estimated wait, transfer and finish time, grid carbon now and forecast, the task's estimated carbon there, load.</li>
+        <li><b>About the task (20 numbers):</b> class, estimated size, time left until its sub-deadline (the "budget"), work still to do after it,
+        privacy flag, how loaded the system is, time of day, how much work its whole job still has (<b>job pressure</b>), and the preference <b>w</b>.</li>
+        <li><b>About each candidate node (18 numbers):</b> tier, speed, estimated transfer, wait, run and finish time, grid carbon now and in 1 h and 3 h,
+        the task's estimated carbon there, current load, and "would it finish in time?".</li>
       </ul>
-      <h3>Action (what it can do)</h3>
+      <h3>Action a: what the agent can do</h3>
       <ul>
-        <li>Pick one node, or <b>Defer</b> (only batch jobs with spare time).</li>
-        <li><b>Masks</b> remove illegal choices: crashed nodes, private data going abroad, other cameras' boxes.</li>
+        <li>Pick <b>one node</b> for the task, or <b>Defer</b> it (only batch tasks with spare time, at most 3 times).</li>
+        <li><b>Masks</b> remove illegal moves before the agent chooses: crashed nodes, nodes without memory, private data leaving India,
+        another camera's box. The agent never wastes experience on impossible actions.</li>
       </ul>
     </div>
     <div>
-      <h3>Reward (what it is paid for)</h3>
+      <h3>Reward r: what the agent is paid</h3>
       <ul>
-        <li>Lose points for <b>carbon</b> (scaled by 1 − w).</li>
-        <li>Lose points for <b>lateness</b> (scaled by w): half for the task's own <b>sub-deadline</b>, half for the whole job's deadline.</li>
+        <li><b>Carbon cost</b> of the task, weighted by <b>(1 − w)</b>.</li>
+        <li><b>Lateness cost</b>, weighted by <b>w</b>: half for missing the task's own <b>sub-deadline</b>, half for missing the job's deadline.</li>
+        <li>Rewards are negative (costs): the agent learns to make them as close to 0 as possible.</li>
       </ul>
       <div class="box tip"><span class="lbl">Key idea: deadline decomposition</span>
       A big job has dozens of tasks. If we only punish the job at the end, the agent cannot tell <i>which</i> task caused the miss.
-      So each task gets its own sub-deadline = job deadline − time still needed after it. Now each decision is judged fairly.
-      Before this fix, the agent ignored w and missed 45% of analytics deadlines.</div>
+      So each task gets its own sub-deadline: <b>job deadline − time still needed after this task</b>. Now each decision is judged by what it controlled.</div>
+      <h3>Goal</h3>
+      <p>Maximise the sum of future rewards (the <b>return</b>). With γ = 0.8, rewards a few decisions ahead still count, but the agent focuses on the
+      consequences of its own placement.</p>
     </div>
   </div>
 
-  <h3>The policy network (why it works for any number of nodes)</h3>
-  <div class="flow">
-    <div class="st"><b>Input per node</b>node facts + task facts (incl. w)</div><div class="ar">→</div>
-    <div class="st"><b>Same small MLP</b>for every node (2 × 128 units)</div><div class="ar">→</div>
-    <div class="st"><b>One score per node</b>+ a score for "defer"</div><div class="ar">→</div>
-    <div class="st"><b>Masked softmax</b>probabilities over legal actions</div>
-  </div>
-  <p>Because the <b>same</b> network scores every node, it works with 6 nodes or 30, and a crashed node is simply masked out. It has about
-  60,000 parameters and decides in about 0.55 ms. A separate <b>critic</b> estimates how good the state is (needed for PPO).</p>
-
-  <h3>At deployment: two extra safety layers</h3>
-  <ul>
-    <li><b>SLA-target controller:</b> the operator says "at most 5% missed". If misses go up, the controller raises w; if there is headroom, it lowers w to save carbon. <b>No retraining</b>, because w is just an input.</li>
-    <li><b>Safety shield:</b> before the agent chooses, remove nodes that clearly cannot finish the task in time.</li>
-  </ul>
+  <h3>Example: one alert task with w = 0.9</h3>
+  <table>
+    <tr><th>Option</th><th>Estimated finish</th><th>Carbon</th><th>What the agent learns to do</th></tr>
+    <tr><td>Edge (camera box)</td><td>0.05 s · always in time</td><td>medium</td><td rowspan="3">Mumbai and edge are safe; Stockholm is cleanest but risky for a 1 s deadline.
+    With w = 0.9 (deadlines matter most) it learns to keep alerts near and send <b>flexible</b> analytics and batch work to Stockholm.</td></tr>
+    <tr><td>Mumbai fog</td><td>0.5 s · in time</td><td>high (dirty grid)</td></tr>
+    <tr><td>Stockholm cloud</td><td>0.6 s+ · tight</td><td>very low</td></tr>
+  </table>
+  <p class="small">Numbers are typical values shown by our live dashboard; the real decision uses all 18 node features.</p>
 </div>
 
-<!-- ============================================================ PAGE 4 -->
+<!-- ============================================================ PAGE 5: Step 3 agent + formulas -->
 <div class="page">
-  <h2>3. The important formulas, explained simply <span class="pn">page 4</span></h2>
+  <h2><span class="step">Step 3</span>The agent (actor–critic) and the key formulas</h2>
+
+  <div class="flow">
+    <div class="st"><b>Input per node</b>node facts + task facts (incl. w)</div><div class="ar">→</div>
+    <div class="st"><b>Same small MLP</b>for every node (2 × 128)</div><div class="ar">→</div>
+    <div class="st"><b>One score per node</b>+ a score for "defer"</div><div class="ar">→</div>
+    <div class="st"><b>Masked softmax</b>probabilities of legal actions</div>
+  </div>
+  <p><b>Actor</b> (the policy above) chooses actions. <b>Critic</b> (a second head) predicts how good the current state is, V(s), which PPO needs.
+  Because the <b>same</b> network scores every node, it works with 6 nodes or 30, and a crashed node is just masked out (≈ 60 K parameters, ≈ 0.55 ms per decision).</p>
 
   <div class="f"><div class="t">① Return: what the agent maximises</div>
-    <div class="eq">G = r<sub>1</sub> + γ·r<sub>2</sub> + γ<sup>2</sup>·r<sub>3</sub> + …&nbsp;&nbsp;&nbsp;&nbsp;(γ = 0.8)</div>
-    <div class="ex">Total reward from now on, with future rewards counted a bit less. γ = 0.8 is small on purpose: a placement mostly affects its own job.</div></div>
+    <div class="eq">G = r<sub>1</sub> + γ·r<sub>2</sub> + γ<sup>2</sup>·r<sub>3</sub> + …&nbsp;&nbsp;&nbsp;(γ = 0.8)</div>
+    <div class="ex">Total future reward, with later rewards counted a bit less.</div></div>
 
-  <div class="f"><div class="t">② Our reward for placing task i</div>
-    <div class="eq">r = − [ (1 − w) · carbon<sub>i</sub> + w · ( ½·late<sub>task</sub> + ½·late<sub>job</sub> ) ]</div>
-    <div class="ex">carbon<sub>i</sub> is the task's CO₂, normalised so both parts have similar size. late = 0 if on time, otherwise 1 + how late (capped at 2). w = 1: only deadlines matter; w = 0: only carbon matters.</div></div>
+  <div class="f"><div class="t">② Reward for placing task i</div>
+    <div class="eq">r = − [ (1 − w)·carbon<sub>i</sub> + w·( ½·late<sub>task</sub> + ½·late<sub>job</sub> ) ]</div>
+    <div class="ex">carbon is normalised so both parts have similar size. late = 0 if on time, otherwise 1 + how late (capped at 2).</div></div>
 
   <div class="f"><div class="t">③ Policy: probability of choosing node m</div>
     <div class="eq">π(m | s, w) = e<sup>z<sub>m</sub></sup> / Σ<sub>legal k</sub> e<sup>z<sub>k</sub></sup></div>
-    <div class="ex">Softmax over the scores z of the legal nodes only (masked). At deployment we simply take the node with the highest probability.</div></div>
+    <div class="ex">Softmax over the scores of legal nodes. Training samples from it (exploration); deployment takes the most likely node.</div></div>
 
-  <div class="f"><div class="t">④ Advantage: was this action better than usual?</div>
-    <div class="eq">A = (return actually obtained) − V(s)</div>
-    <div class="ex">V(s) is the critic's guess of the return from this state. A &gt; 0: the action was better than expected, so make it more likely. We use GAE (λ = 0.9), a smoothed version of this.</div></div>
+  <div class="f"><div class="t">④ Advantage: was the action better than expected?</div>
+    <div class="eq">δ<sub>t</sub> = r<sub>t</sub> + γ·V(s<sub>t+1</sub>) − V(s<sub>t</sub>)&nbsp;&nbsp;&nbsp;&nbsp;A<sub>t</sub> = δ<sub>t</sub> + γλ·δ<sub>t+1</sub> + (γλ)<sup>2</sup>·δ<sub>t+2</sub> + …</div>
+    <div class="ex">δ = "surprise" at one step. A (GAE, λ = 0.9) adds up the surprises that follow. A &gt; 0: better than the critic expected.</div></div>
 
-  <div class="f"><div class="t">⑤ PPO update: improve, but not too much at once</div>
-    <div class="eq">ratio = π<sub>new</sub>(a|s) / π<sub>old</sub>(a|s)&nbsp;&nbsp;&nbsp;&nbsp;L<sub>PPO</sub> = − min( ratio·A , clip(ratio, 0.8, 1.2)·A )</div>
-    <div class="ex">Increase the probability of good actions (A &gt; 0) and decrease bad ones, but the clip stops the policy changing by more than ±20% per update. This keeps training stable.</div></div>
+  <div class="f"><div class="t">⑤ PPO policy update: improve, but carefully</div>
+    <div class="eq">ratio = π<sub>new</sub>(a|s) / π<sub>old</sub>(a|s)&nbsp;&nbsp;&nbsp;L<sub>PPO</sub> = − min( ratio·A , clip(ratio, 0.8, 1.2)·A )</div>
+    <div class="ex">Make good actions (A &gt; 0) more likely and bad ones less likely, but never change an action's probability by more than ±20% per update.</div></div>
 
-  <div class="f"><div class="t">⑥ Full training loss</div>
-    <div class="eq">L = L<sub>PPO</sub> + 0.5·(V(s) − G)<sup>2</sup> − β·entropy</div>
-    <div class="ex">Policy part + critic error (learn V) − an entropy bonus that keeps the agent exploring early on (β goes from 0.01 down to 0.002).</div></div>
-
-  <div class="f"><div class="t">⑦ Behaviour cloning (warm start before PPO)</div>
-    <div class="eq">L<sub>BC</sub> = − log π( action CA-EFT would take | s )</div>
-    <div class="ex">First copy a good simple rule, so PPO does not start from random placements that miss almost every deadline.</div></div>
-
+  <div class="two">
+    <div class="f"><div class="t">⑥ Full loss</div>
+      <div class="eq">L = L<sub>PPO</sub> + 0.5·(V(s) − G)<sup>2</sup> − β·entropy</div>
+      <div class="ex">Policy + critic error − exploration bonus (β: 0.01 → 0.002).</div></div>
+    <div class="f"><div class="t">⑦ Behaviour cloning (warm start)</div>
+      <div class="eq">L<sub>BC</sub> = − log π( CA-EFT's action | s )</div>
+      <div class="ex">First copy a good simple rule.</div></div>
+  </div>
   <div class="two">
     <div class="f"><div class="t">⑧ SLA controller (sets w live)</div>
       <div class="eq">e = miss rate − target<br>w = w<sub>0</sub> + 0.8·e + 0.08·Σe</div>
-      <div class="ex">Too many misses → e &gt; 0 → w goes up. A "PI controller", like a thermostat.</div></div>
+      <div class="ex">Too many misses → w goes up. Like a thermostat (PI controller).</div></div>
     <div class="f"><div class="t">⑨ Safety shield</div>
       <div class="eq">keep node if: time to finish ≤ (1 − 0.6w)·budget</div>
-      <div class="ex">At w = 1, a node must finish within 40% of the remaining time to be allowed.</div></div>
+      <div class="ex">At w = 1 a node must finish within 40% of the time left.</div></div>
   </div>
-
   <div class="two">
     <div class="f"><div class="t">⑩ Carbon of a task</div>
       <div class="eq">CO₂ = extra power × run time × grid intensity</div>
-      <div class="ex">Grid intensity (g/kWh) is what makes Mumbai ≈ 20× dirtier than Stockholm.</div></div>
-    <div class="f"><div class="t">⑪ SLA miss rate (main metric)</div>
+      <div class="ex">Grid intensity makes Mumbai ≈ 20× dirtier than Stockholm.</div></div>
+    <div class="f"><div class="t">⑪ Miss rate (main metric)</div>
       <div class="eq">miss rate = (# A+B jobs late) / (# A+B jobs)</div>
-      <div class="ex">The same metric MERSEM uses.</div></div>
+      <div class="ex">The same metric as MERSEM.</div></div>
   </div>
 </div>
 
-<!-- ============================================================ PAGE 5 -->
+<!-- ============================================================ PAGE 6: Step 4 learning over time -->
 <div class="page">
-  <h2>4. Step by step: how we built, trained and use PACE <span class="pn">page 5</span></h2>
+  <h2><span class="step">Step 4</span>How the agent learns over time</h2>
 
-  <h3>Training flow (offline, on the laptop)</h3>
+  <h3>The training loop (one "iteration")</h3>
   <div class="flow">
-    <div class="st"><b><span class="num-badge">1</span>Data</b>dataset jobs<br>(train split) + 3 job classes</div><div class="ar">→</div>
-    <div class="st"><b><span class="num-badge">2</span>Simulator</b>random worlds: nodes, load, network, noise</div><div class="ar">→</div>
-    <div class="st"><b><span class="num-badge">3</span>Copy CA-EFT</b>behaviour cloning, 3 rounds</div><div class="ar">→</div>
-    <div class="st"><b><span class="num-badge">4</span>PPO</b>82 rounds, w random each episode (≈35 min)</div><div class="ar">→</div>
-    <div class="st"><b><span class="num-badge">5</span>pace.pt</b>final policy</div>
+    <div class="st"><b><span class="nb">1</span>Collect</b>parallel workers play episodes with the current policy, ≈ 43,000 decisions</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">2</span>Score</b>when jobs finish, give each decision its reward ②</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">3</span>Judge</b>critic gives V(s); compute advantages A ④</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">4</span>Update</b>4 passes of PPO ⑤⑥ over the data in mini-batches</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">5</span>Check</b>every 3 iterations: 2 fixed validation runs vs CA-EFT</div>
   </div>
-  <ul>
-    <li><b>Step 2, domain randomisation:</b> every training episode is a different world (2–6 edge, 1–3 fog, 1–3 cloud nodes; network ×0.5–1.5; noisy runtime estimates). This is why the policy copes with situations it has not seen.</li>
-    <li><b>Step 4:</b> each episode picks a random w, so <b>one network learns every trade-off</b> (preference-conditioned RL). ≈ 3.5 million decisions in total.</li>
-  </ul>
+  <p class="loopback">↻ repeat with the improved policy (82 iterations, ≈ 3.5 million decisions, ≈ 35 minutes on the laptop CPU)</p>
+  <p>Before this loop, <b>3 iterations of behaviour cloning</b> ⑦ teach the agent to imitate CA-EFT. Starting from a random policy would be slow:
+  random placements miss almost every deadline, so almost every reward would be bad and hard to learn from.</p>
 
-  <h3>From simulation to the real machines</h3>
+  <div class="two" style="align-items:flex-start">
+    <div class="fig" style="flex:0 0 46%"><img src="../../report/ieee/figures/training.png">
+      <div class="cap">Final model. (a) reward per decision; (b) validation carbon; (c) validation alert misses; (b, c) at w = 0.75 vs the CA-EFT teacher.</div></div>
+    <div>
+      <h3 style="margin-top:0">What it learned, phase by phase</h3>
+      <div class="box"><b>After cloning (iterations 0–3).</b> Carbon ≈ the teacher's (0.32 vs 0.31 g). It behaves like CA-EFT: a safe start.</div>
+      <div class="box"><b>Fast gains (3–15).</b> Carbon drops ≈ 40% (0.32 → 0.19 g) while alert misses stay at or below the teacher's.
+      It discovers that flexible work (analytics, batch) can go to clean Stockholm instead of dirty Mumbai without missing deadlines.</div>
+      <div class="box"><b>Fine-tuning (15–82).</b> Carbon flat at 0.17–0.18 g (−44% vs teacher); alert misses wobble around the teacher's 0.8%.
+      It balances edge cases: busy hours, big DAGs, and when Stockholm is too far for a tight deadline.</div>
+    </div>
+  </div>
+  <p class="small">Why is the reward curve (a) so noisy? Every episode is a different random world and a different w, so the reward level jumps
+  between episodes. The trend (thick line) and the fixed validation runs (b, c) are what show learning. The agent at w = 0.75 accepts a few more analytics misses
+  than its teacher in exchange for much less carbon: that is the trade-off it was asked to make.</p>
+
+  <div class="box key"><span class="lbl">Proof that PPO (not just copying) made the difference</span>
+  We tested the policy after cloning only: it matches CA-EFT (2.8% missed, 0.78 g) and gives <b>identical</b> results at w = 0 and w = 0.9: it ignores w.
+  After PPO, w really controls the behaviour: w = 0 → 11.5% missed, 0.30 g; w = 0.9 → <b>1.3%</b> missed, 0.39 g. At w = 0.9 PPO halved the carbon of the
+  cloned policy <i>and</i> missed fewer deadlines.</div>
+</div>
+
+<!-- ============================================================ PAGE 7: Step 5 improvements -->
+<div class="page">
+  <h2><span class="step">Step 5</span>How we improved the algorithm (what failed, why, what fixed it)</h2>
+  <p>PACE did not work on the first try. Each row is one round of "train → test → find the cause → fix". This is a good viva story: it shows we understood
+  <i>why</i> the agent behaved as it did.</p>
+
+  <table class="why">
+    <tr><th>Version / change</th><th>Problem we saw</th><th>Reasoning (why it happened)</th><th>Fix</th></tr>
+    <tr><td>v1: job penalty split across the job's tasks</td><td>Agent ignored w; missed 45% of analytics deadlines on test jobs</td><td>Each task got a tiny share of a big job's penalty: the lateness signal was too weak compared with carbon, so carbon always won.</td><td>Give the full penalty (v2)</td></tr>
+    <tr><td>v2: full job penalty to every task</td><td>Still poor on large DAGs</td><td>All 30 tasks of a late job got the same punishment, even the ones that were placed well: the agent could not tell good from bad decisions (credit assignment).</td><td>Deadline decomposition (v3)</td></tr>
+    <tr><td><b>v3: deadline decomposition</b></td><td>w finally mattered</td><td>Each task is judged against its own sub-deadline, which its own placement controls.</td><td>Kept</td></tr>
+    <tr><td>v4: class-balanced loss</td><td>No gain</td><td>Weighting rare analytics decisions more did not fix their outcomes.</td><td>Dropped</td></tr>
+    <tr><td><b>v5: job-pressure features + priority queues</b> (final)</td><td>Wide DAGs overloaded the small clean cloud</td><td>The critical path alone underestimates a wide job's total work; the agent needed to "see" how much work the job still had.</td><td>Final model, <code>pace.pt</code></td></tr>
+    <tr><td>Behaviour-cloning warm start</td><td>Training from scratch was slow</td><td>A random policy misses nearly every deadline, so rewards carry little information.</td><td>Copy CA-EFT first</td></tr>
+    <tr><td>Safety shield</td><td>Pure policy still missed many analytics jobs</td><td>A learned policy can take risks a simple check would avoid.</td><td>Remove clearly late nodes</td></tr>
+    <tr><td>Fine-tune in the digital twin</td><td>Real machines differ from the simulator</td><td>Real speeds, delays and CPU contention were different (Step 6).</td><td><code>pace_live.pt</code></td></tr>
+    <tr><td>Online network estimate</td><td>First real run: alerts late</td><td>The real network to Mumbai slowed in the evening; estimates were stale.</td><td>Add recent extra delay to every estimate</td></tr>
+    <tr><td>Controller reset on a new target</td><td>Demo: w did not react to a new SLA target</td><td>The controller's memory (Σe) of the old target held w down ("wind-up").</td><td>Reset Σe when the target changes</td></tr>
+  </table>
+</div>
+
+<!-- ============================================================ PAGE 8: Step 6 sim to real + usage -->
+<div class="page">
+  <h2><span class="step">Step 6</span>From simulation to real machines, and how PACE is used</h2>
+
+  <h3>Training and deployment flow</h3>
+  <div class="flow">
+    <div class="st"><b><span class="nb">1</span>Data</b>dataset jobs (train split) + 3 classes</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">2</span>Simulator</b>random worlds (Step 1)</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">3</span>Clone CA-EFT</b>3 iterations</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">4</span>PPO</b>82 iterations</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb">5</span>pace.pt</b>simulation results</div>
+  </div>
   <div class="flow green">
-    <div class="st"><b><span class="num-badge" style="background:var(--green)">6</span>Calibrate</b>measure real speeds, delays, contention</div><div class="ar">→</div>
-    <div class="st"><b><span class="num-badge" style="background:var(--green)">7</span>Digital twin</b>simulator with real numbers</div><div class="ar">→</div>
-    <div class="st"><b><span class="num-badge" style="background:var(--green)">8</span>Fine-tune</b>PPO again in the twin → pace_live.pt</div><div class="ar">→</div>
-    <div class="st"><b><span class="num-badge" style="background:var(--green)">9</span>Real runs</b>compare with MERSEM, CA-EFT</div>
+    <div class="st"><b><span class="nb" style="background:var(--green)">6</span>Calibrate</b>measure real speeds, delays, contention</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb" style="background:var(--green)">7</span>Digital twin</b>simulator with real numbers</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb" style="background:var(--green)">8</span>PPO again</b>in the twin → pace_live.pt</div><div class="ar">→</div>
+    <div class="st"><b><span class="nb" style="background:var(--green)">9</span>Real runs</b>vs MERSEM, CA-EFT</div>
   </div>
-  <div class="box tip"><span class="lbl">Three sim-to-real gaps we found and fixed (good viva story)</span>
-    <b>1. Dispatch:</b> the orchestrator held a CPU slot during each network call → now tasks are sent as soon as they are placed.
-    <b>2. CPU contention:</b> a 2-vCPU x86 server is really 1 physical core; two tasks at once ran 1.7–1.8× slower → now measured per node.
-    <b>3. Network drift:</b> the link to Mumbai got slower in the evening, so alerts sent there were late → we added an <b>online network estimate</b> (add the recent 90th-percentile extra delay to every estimate).</div>
 
-  <h3>Usage flow (what happens live, for every task)</h3>
+  <div class="box tip"><span class="lbl">Three sim-to-real gaps we found and fixed</span>
+    <b>1. Dispatch:</b> the orchestrator held a CPU slot during each network call → tasks are now sent as soon as they are placed.<br>
+    <b>2. CPU contention:</b> a 2-vCPU x86 server is really 1 physical core; two tasks at once ran 1.7–1.8× slower (the simulator assumed 1.15×) → now measured per node.<br>
+    <b>3. Network drift:</b> the link to Mumbai slowed during the evening, so alerts sent there were late, and PACE lost to MERSEM in that first run →
+    an <b>online network estimate</b> adds the recent 90th-percentile extra delay to every estimate.</div>
+
+  <h3>Usage flow: what happens live, for every task</h3>
   <div class="flow">
-    <div class="st"><b>Task ready</b>its parent tasks finished</div><div class="ar">→</div>
+    <div class="st"><b>Task ready</b>its parents finished</div><div class="ar">→</div>
     <div class="st"><b>Build state</b>estimates + live network correction</div><div class="ar">→</div>
-    <div class="st"><b>Mask + shield</b>remove illegal / too-slow nodes</div><div class="ar">→</div>
-    <div class="st"><b>Policy picks</b>node with highest probability</div><div class="ar">→</div>
-    <div class="st"><b>Run + learn w</b>result returns; controller updates w</div>
+    <div class="st"><b>Mask + shield</b>remove illegal or too-slow nodes</div><div class="ar">→</div>
+    <div class="st"><b>Policy picks</b>most likely node</div><div class="ar">→</div>
+    <div class="st"><b>Run, then adapt</b>controller updates w from recent misses</div>
   </div>
+  <p>There is <b>no learning while deployed</b>: the network's weights are frozen. What adapts live is <b>w</b> (through the controller) and the
+  <b>network estimate</b>. That is why the operator can change the SLA target without retraining.</p>
 
-  <h3>What we ran (the experiments)</h3>
+  <h3>What we ran</h3>
   <table>
     <tr><th>ID</th><th>Where</th><th>Question it answers</th></tr>
     <tr><td>E1</td><td>Simulation</td><td>Normal load: who misses fewest deadlines, with how much carbon? (10 seeds)</td></tr>
     <tr><td>E2–E5</td><td>Simulation</td><td>Stress: more load, wrong runtime estimates, node crashes, rush hour</td></tr>
     <tr><td>E6</td><td>Simulation</td><td>Setups never seen in training: bigger city, new region, heavier jobs, slow network</td></tr>
-    <tr><td>E8 / E8b</td><td>Real AWS</td><td>Same comparison on real machines (E8b = with the network fix), 6 paired runs</td></tr>
+    <tr><td>E8 / E8b</td><td>Real AWS</td><td>The same comparison on real machines (E8b = with the network fix); 6 paired runs</td></tr>
     <tr><td>E9</td><td>Both</td><td>How close was the simulator's prediction to the real result?</td></tr>
   </table>
-  <p class="small">Fair comparison: every method sees the same jobs and carbon trace in each seed; tests use only held-out jobs; we report paired Wilcoxon tests.</p>
+  <p class="small">Fair comparison: every method sees the same jobs and carbon trace in each seed, tests use only held-out jobs, and we use paired Wilcoxon tests.
+  Our MERSEM is even given a perfect prediction of the next 15 minutes.</p>
 </div>
 
-<!-- ============================================================ PAGE 6 -->
+<!-- ============================================================ PAGE 9: Step 7 results with reasoning -->
 <div class="page">
-  <h2>5. Results, positives, negatives, and viva answers <span class="pn">page 6</span></h2>
+  <h2><span class="step">Step 7</span>Results, and the reasoning behind them</h2>
 
   <table>
-    <tr><th>Experiment</th><th class="num">MERSEM</th><th class="num">CA-EFT</th><th class="num">PACE</th><th>Meaning</th></tr>
-    <tr><td>Simulation, normal load: deadlines missed</td><td class="num">13.3%</td><td class="num">2.8%</td><td class="num"><b>1.3%</b></td><td>10× fewer misses than the base paper</td></tr>
-    <tr><td>… dynamic carbon (g)</td><td class="num">0.51</td><td class="num">0.74</td><td class="num"><b>0.39</b></td><td>−22% vs MERSEM, −47% vs CA-EFT</td></tr>
-    <tr><td>2× load: missed</td><td class="num">26.3%</td><td class="num">7.2%</td><td class="num"><b>3.0%</b></td><td>MERSEM's 15-min plan goes stale</td></tr>
-    <tr><td>Unseen: 2× larger city: missed</td><td class="num">17.3%</td><td class="num">4.6%</td><td class="num"><b>0.4%</b></td><td>shared node scorer generalises</td></tr>
-    <tr><td>Unseen: much slower network: missed</td><td class="num">24.8%</td><td class="num"><b>1.4%</b></td><td class="num">17.3%</td><td><b>our failure case</b></td></tr>
-    <tr><td>Real AWS, normal / busy: missed</td><td class="num">9.4 / 14.3%</td><td class="num">3.7 / 6.2%</td><td class="num">3.8 / 6.6%</td><td>beat MERSEM in 6/6 runs (p = 0.031)</td></tr>
+    <tr><th>Experiment</th><th class="num">MERSEM</th><th class="num">CA-EFT</th><th class="num">PACE</th></tr>
+    <tr><td>Simulation, normal load: deadlines missed</td><td class="num">13.3%</td><td class="num">2.8%</td><td class="num"><b>1.3%</b></td></tr>
+    <tr><td>… dynamic carbon (g)</td><td class="num">0.51</td><td class="num">0.74</td><td class="num"><b>0.39</b></td></tr>
+    <tr><td>2× load: missed</td><td class="num">26.3%</td><td class="num">7.2%</td><td class="num"><b>3.0%</b></td></tr>
+    <tr><td>Unseen: 2× larger city: missed</td><td class="num">17.3%</td><td class="num">4.6%</td><td class="num"><b>0.4%</b></td></tr>
+    <tr><td>Unseen: much slower network: missed</td><td class="num">24.8%</td><td class="num"><b>1.4%</b></td><td class="num">17.3%</td></tr>
+    <tr><td>Real AWS, normal / busy hour: missed</td><td class="num">9.4 / 14.3%</td><td class="num">3.7 / 6.2%</td><td class="num">3.8 / 6.6%</td></tr>
   </table>
-  <p class="small">RL ablation: behaviour cloning alone just copies CA-EFT (2.8%, 0.78 g) and ignores w. PPO is what makes w work: from w = 0 to 0.9, misses fall 11.5% → 1.3% while carbon rises only 0.30 → 0.39 g.</p>
 
   <div class="two">
-    <div class="box good"><span class="lbl">Positives</span>
-      <ul style="margin:0">
-        <li>Far fewer deadline misses than the base paper, with less carbon (simulation)</li>
-        <li>Fast: ≈ 1 ms per decision, reacts instantly to crashes and rush hours</li>
-        <li>One network for every trade-off; the SLA target can change live</li>
-        <li>Works on bigger networks and a new region without retraining</li>
-        <li>Tested on real machines, not just simulation</li>
-      </ul></div>
-    <div class="box bad"><span class="lbl">Negatives (say these before they ask)</span>
-      <ul style="margin:0">
-        <li>Large analytics jobs: plain PACE misses 23% vs CA-EFT's 6% (the shield fixes most of it)</li>
-        <li>Very slow network outside training: 17% vs CA-EFT's 1.4%</li>
-        <li>On real AWS, PACE used 15% more carbon than MERSEM (not significant)</li>
-        <li>Carbon data is synthetic (built from real yearly averages)</li>
-        <li>Small testbed: 6 nodes, 3 seeds per load</li>
-      </ul></div>
+    <div class="fig"><img src="../../report/ieee/figures/tradeoff.png">
+      <div class="cap">One PACE policy (blue) at different w lies below both baselines: for any miss rate it needs less carbon.</div></div>
+    <div class="fig"><img src="../../report/ieee/figures/load.png">
+      <div class="cap">As load grows, MERSEM's misses climb fastest.</div></div>
   </div>
 
-  <h3>Likely viva questions, short answers</h3>
+  <h3>Why PACE does better</h3>
+  <table class="why">
+    <tr><td>Fewer misses than MERSEM (13.3% → 1.3%)</td><td>PACE decides <b>when each task is ready</b>, using the queues <i>right now</i>. MERSEM's plan is made up to 15 minutes ahead,
+    so under load or after a crash it is out of date (its misses grow fastest in the load plot). PACE also places tasks <b>individually</b>; forcing it to place whole jobs
+    like MERSEM raised analytics misses to 51%.</td></tr>
+    <tr><td>Less carbon than both</td><td>The reward taught it <b>which work can afford the trip to clean Stockholm</b>: flexible analytics and batch go north, urgent alerts stay near.
+    CA-EFT uses one fixed safety margin for every task, so it plays safe and sends more work to dirty Mumbai.</td></tr>
+    <tr><td>One policy, any trade-off</td><td>w is an input during training (random every episode), so the network learned the whole curve; the controller just moves along it.</td></tr>
+    <tr><td>Bigger network, new region</td><td>The <b>shared node scorer</b> judges each node by its features (speed, delay, carbon), not by its identity, so new or extra nodes are just more rows.</td></tr>
+    <tr><td>Robust to noise and failures</td><td>Training already contained noisy estimates and varied worlds; crashed nodes are masked and their tasks re-decided immediately.</td></tr>
+  </table>
+</div>
+
+<!-- ============================================================ PAGE 10: drawbacks + QA -->
+<div class="page">
+  <h2>Drawbacks, with reasoning (say these before they ask)</h2>
+  <table class="why">
+    <tr><td>Large analytics jobs: plain PACE misses 23% vs CA-EFT's 6%</td><td>(1) Alerts are 98% of decisions, so the learning signal is dominated by alerts.
+    (2) Test DAGs are larger than training ones (median 25 vs 15 tasks): a distribution shift. (3) The reward charges a placement only for <i>its own</i> job,
+    not for the queue it creates for <i>other</i> jobs, so the agent piles big jobs onto the small clean cloud. <b>Fix:</b> the shield brings it to 6%;
+    next step: a reward term for delay caused to others.</td></tr>
+    <tr><td>Much slower network: 17% vs CA-EFT's 1.4%</td><td>Training never saw delays above 1.5× normal. Outside that range the learned pattern "Stockholm is reachable in time"
+    is wrong, and the agent keeps sending alerts there. CA-EFT recomputes finish times with a formula, so it adapts. <b>Fix:</b> wider network randomisation
+    in training plus the online network estimate.</td></tr>
+    <tr><td>Real AWS: +15% carbon vs MERSEM</td><td>At w = 0.9 PACE is told deadlines matter most, so it spends some carbon to miss fewer (6/6 runs better on deadlines).
+    MERSEM sits at a different point (less carbon, many more misses). The carbon difference is not statistically significant (p = 0.16).</td></tr>
+    <tr><td>First real run lost to MERSEM</td><td>Network drift (Step 6): PACE trusted the calibrated delay to Mumbai. Fixed by the online estimate (E8b).</td></tr>
+    <tr><td>Simulator is optimistic</td><td>Real misses were 1–5 points higher than the twin predicted: the campus network varies more than the simulated one.</td></tr>
+    <tr><td>Limitations</td><td>Carbon data is synthetic (built from real yearly averages; free hourly data for India was unavailable). Small testbed: 6 nodes, 3 seeds per load.</td></tr>
+  </table>
+
+  <h2 style="margin-top:12px">Likely viva questions, short answers</h2>
   <div class="qa">
-    <p><b>Q: Why RL and not a simple rule?</b> The best choice depends on many changing things (queues, carbon, network, DAG). A rule like CA-EFT must be re-tuned when goals change; our one policy covers every w and still uses 15–47% less carbon than CA-EFT.</p>
-    <p><b>Q: Why PPO?</b> Stable (clipped updates), works with large discrete action sets and masks, and is the standard choice for policy-gradient training in simulators.</p>
-    <p><b>Q: Why behaviour cloning first?</b> A random policy misses almost every deadline, so it learns slowly. Copying CA-EFT gives a sensible start; PPO then improves on its teacher.</p>
-    <p><b>Q: What is new compared with MERSEM?</b> Online task-level decisions, deep RL as the scheduler, one policy for all w plus a live controller, failure handling, and real-machine validation.</p>
-    <p><b>Q: Is comparing with MERSEM fair?</b> We were generous: our MERSEM sees the <i>actual</i> next-epoch jobs (perfect prediction) and falls back to EFT on failures. Everyone gets the same jobs and carbon traces.</p>
-    <p><b>Q: Why does PACE fail on the slow network?</b> That network is far outside what it saw in training; CA-EFT simply recomputes finish times. Fix: wider network randomisation in training plus the online network estimate.</p>
-    <p><b>Q: How do you measure carbon on AWS?</b> AWS gives no power meter, so: CPU time × published watts per vCPU × PUE × the grid's carbon intensity (the same model as MERSEM).</p>
+    <p><b>Q: What exactly is the environment?</b> A discrete-event simulator of edge, fog and cloud nodes, network links and arriving DAG jobs (training), or the real AWS testbed (deployment). It shows the agent a task and its options, applies the choice, and returns rewards when jobs finish.</p>
+    <p><b>Q: Is it on-policy or off-policy?</b> On-policy: PPO only learns from data collected by the current policy, then throws it away and collects new data.</p>
+    <p><b>Q: Why PPO and not DQN?</b> Policy-gradient methods handle a changing set of legal actions (masks) and a variable number of nodes naturally, and PPO's clipping keeps training stable.</p>
+    <p><b>Q: How does it explore?</b> During training actions are <i>sampled</i> from the softmax, plus an entropy bonus; at deployment it takes the most likely action.</p>
+    <p><b>Q: Why γ = 0.8?</b> A placement mostly affects its own job; a short horizon makes credit assignment easier and training faster.</p>
+    <p><b>Q: Does it keep learning after deployment?</b> No, the weights are frozen. Only w (via the controller) and the network estimate adapt live.</p>
+    <p><b>Q: Why behaviour cloning first?</b> A random policy misses nearly every deadline, so it learns slowly. Copying CA-EFT is a good start; PPO then beats its teacher.</p>
+    <p><b>Q: What is new compared with MERSEM?</b> Online task-level decisions, deep RL as the scheduler, one policy for all w with a live controller, failure handling, and real-machine tests.</p>
+    <p><b>Q: Is the comparison fair?</b> Yes: same jobs and carbon traces; our MERSEM even gets a perfect prediction of the next 15 minutes and an EFT fallback for failures.</p>
+    <p><b>Q: How is carbon measured on AWS?</b> AWS has no power meter, so: CPU time × published watts per vCPU × PUE × grid intensity (the same model as MERSEM).</p>
   </div>
 </div>
 

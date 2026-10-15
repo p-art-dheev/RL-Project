@@ -1,6 +1,6 @@
 # Project report (LaTeX, for Overleaf)
 
-`main.tex` + `figures/`. To open in Overleaf: **New Project → Upload Project** and choose
+`main.tex` + `figures/`: long report. `ieee/`: IEEE conference paper (IEEEtran), the version to submit.
 `PACE_report_overleaf.zip` (or upload `main.tex` and the `figures` folder). Compiler: pdfLaTeX (the default).
 
 Before submitting, replace `[Department and Institution]` near the top of `main.tex`.

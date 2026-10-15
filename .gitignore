@@ -14,3 +14,4 @@ models/pace_v5*.pt
 models/pace_v*_log.json
 *.mp4
 rl-project-venv/
+report/*.zip

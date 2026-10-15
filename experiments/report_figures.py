@@ -3,7 +3,7 @@
   python -m experiments.report_figures
 
 Sources: results/sim/sim_all.csv (E1, E2), results/sim/sim_E6.csv (E6), results/sim/bc_ablation.json,
-models/pace_log.json (training), results/REAL_TESTBED.md (E8b) and results/testbed/E9_SIM2REAL.md (E9).
+models/pace_log.json (training), the E8b run files in results/testbed/adaptive*/ and results/testbed/E9_SIM2REAL.md (E9).
 """
 from __future__ import annotations
 
@@ -140,10 +140,14 @@ def fig_e6():
 
 
 def fig_real():
-    # E8b means from results/REAL_TESTBED.md (A+B missed %, 3 seeds per load)
-    sched = ["MERSEM", "EFT", "CA-EFT", "PACE", "PACE+shield"]
-    nominal = [9.4, 14.4, 3.7, 3.8, 6.1]
-    busy = [14.3, np.nan, 6.2, 6.6, 4.6]
+    # E8b run files (online network estimate), A+B missed %, mean over 3 seeds per load
+    from experiments.testbed_report import ROOT, load, row
+    keys = ["mersem", "eft", "ca-eft", "pace", "pace-shield"]
+    sched = keys
+    nom, bus = load(ROOT / "adaptive"), load(ROOT / "adaptive_busy")
+    nominal = [row(nom[k])["AB"] for k in keys]
+    busy = [row(bus[k])["AB"] if k in bus else np.nan for k in keys]
+    print("E8b nominal", [round(v, 1) for v in nominal], "busy", [round(v, 1) for v in busy])
     fig, ax = plt.subplots(figsize=(W, 2.1))
     x = np.arange(len(sched))
     ax.bar(x - 0.19, nominal, 0.38, color=C["twin"], label="nominal load")
